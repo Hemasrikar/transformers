@@ -1,0 +1,266 @@
+
+% \begin{tikzpicture}[
+%     % Set a light background for the entire canvas
+%     background rectangle/.style={fill=gray!5}, show background rectangle,
+%     scale=0.75, every node/.style={transform shape},
+%     % Define Styles
+%     arrow/.style={-{Stealth[scale=1.2]}, thick, draw=gray!70},
+%     label_node/.style={font=\small\sffamily, text=black!80},
+%     math_node/.style={font=\small},
+%     matrix_label/.style={font=\scriptsize, text=gray!80}
+% ]
+
+% % --- EXACT COLOR GRADINGS (RGB) ---
+% \definecolor{Xblue}{RGB}{104, 187, 196}
+% \definecolor{Qyellow}{RGB}{226, 181, 74}
+% \definecolor{Kgreen}{RGB}{106, 149, 99}
+% \definecolor{Vred}{RGB}{198, 93, 76}
+% \definecolor{Hpurple}{RGB}{120, 103, 161}
+% \definecolor{Ocyan}{RGB}{90, 162, 183}
+% \definecolor{Ogreen}{RGB}{112, 148, 93}
+% \definecolor{Opurple}{RGB}{115, 95, 145}
+% \definecolor{Ogold}{RGB}{181, 148, 81}
+% \definecolor{LinearBox}{RGB}{60, 45, 85} % Dark purple for the linear layer box
+
+% % --- HELPER COMMAND FOR COLORED GRIDS ---
+% \newcommand{\drawgrid}[5]{ % {x}{y}{rows}{cols}{color}
+%     \begin{scope}[shift={(#1,#2)}]
+%         \fill[#5!15] (0,0) rectangle (#4*0.25, #3*0.25);
+%         \draw[#5, ultra thin, step=0.25cm] (0,0) grid (#4*0.25, #3*0.25);
+%         \draw[#5, thick] (0,0) rectangle (#4*0.25, #3*0.25);
+%     \end{scope}
+% }
+
+% % INPUT X
+% \node[math_node, text=Xblue!80!black] (X_label) at (0, 1.3) {$X \in \mathbb{R}^{3 \times 512}$};
+% \drawgrid{-0.75}{0}{3}{6}{Xblue}
+% \coordinate (X_out) at (0.75, 0.375);
+
+% % Q, K, V PROJECTIONS
+% \coordinate (Q_pos) at (2.5, 2.8);
+% \coordinate (K_pos) at (2.5, 0);
+% \coordinate (V_pos) at (2.5, -2.8);
+
+% \draw[arrow, Qyellow] (X_out) -- (2.5,3.2);
+% \draw[arrow, Kgreen] (X_out) -- (2.5,0.4);
+% \draw[arrow, Vred] (X_out) -- (2.5,-2.5);
+
+% % Matrices
+% \node[math_node, text=Qyellow!70!black] at (3.2, 4.1) {$Q = XW_Q$};
+% \drawgrid{2.5}{2.8}{3}{6}{Qyellow}
+% \node[matrix_label] at (3.2, 2.5) {$3 \times 512$};
+
+% \node[math_node, text=Kgreen!70!black] at (3.2, 1.3) {$K = XW_K$};
+% \drawgrid{2.5}{0}{3}{6}{Kgreen}
+% \node[matrix_label] at (3.2, -0.3) {$3 \times 512$};
+
+% \node[math_node, text=Vred!70!black] at (3.2, -1.5) {$V = XW_V$};
+% \drawgrid{2.5}{-2.8}{3}{6}{Vred}
+% \node[matrix_label] at (3.2, -3.1) {$3 \times 512$};
+
+% % THE SPLIT (HEADS)
+% \node[label_node, Qyellow!80!black] at (9.2, 4.8) {$512 \div 4 = 128$ dim per head};
+
+% \foreach \i/\col/\y/\hname in {1/Ocyan/3/H_1, 2/Kgreen/1/H_2, 3/Opurple/-1/H_3, 4/Ogold/-3/H_4} {
+%     \draw[arrow] (4.1, 0.375) -- (6.8, \y + 0.375);
+    
+%     % Head container
+%     \node[draw=\col, fill=white, rounded corners=2pt, minimum width=3.8cm, minimum height=1.3cm] (HB\i) at (9.2, \y+0.4) {};
+%     \node[math_node, \col!80!black, anchor=south] at (HB\i.north) {$\hname$};
+    
+%     % Mini grids inside head
+%     \drawgrid{7.8}{\y+0.15}{3}{3}{Qyellow}
+%     \drawgrid{8.8}{\y+0.15}{3}{3}{Kgreen}
+%     \drawgrid{9.8}{\y+0.15}{3}{3}{Vred}
+    
+%     \node[matrix_label, scale=0.8] at (9.2, \y-0.15) {$3 \times 128$};
+% }
+
+% % ATTENTION OUTPUTS O_i
+% \node[math_node, black!90] at (14.5, 5.5) {$\text{softmax}\left( \frac{Q_i K_i^T}{\sqrt{d_k}} \right) V_i$};
+
+% \foreach \i/\col/\y in {1/Ocyan/3, 2/Ogreen/1, 3/Opurple/-1, 4/Ogold/-3} {
+%     \draw[arrow] (11.2, \y+0.375) -- (14, \y+0.375);
+%     \node[math_node, \col!80!black] at (14.5, \y+1.1) {$O_\i$};
+    
+%     % Shaded Grid for O
+%     \begin{scope}[shift={(14.2, \y)}]
+%         \foreach \r in {0,1,2} \foreach \c in {0,1,2} {
+%             % Simulating the "grading" by varying opacity
+%             \fill[\col!\the\numexpr 30 + \r*15 + \c*10\relax] (\c*0.25, \r*0.25) rectangle +(.25,.25);
+%         }
+%         \draw[\col, ultra thin, step=0.25] (0,0) grid (0.75, 0.75);
+%         \draw[\col, thick] (0,0) rectangle (0.75, 0.75);
+%     \end{scope}
+%     \node[matrix_label, scale=0.8] at (14.5, \y-0.3) {$3 \times 128$};
+    
+%     % Convergence arrows
+%     \draw[arrow, gray!60] (15.1, \y+0.375) -- (17.5, 0.375);
+% }
+
+% \node[label_node, Ogold!80!black] at (15.2, -4.5) {4 independent contextual perspectives};
+
+% % CONCATENATION
+% \node[math_node, black!90] at (19.0, 1.6) {$\text{Concat}([O_1, O_2, O_3, O_4])$};
+% \begin{scope}[shift={(17.6, 0.1)}]
+%     \drawgrid{0}{0}{3}{2}{Ocyan}
+%     \drawgrid{0.5}{0}{3}{2}{Ogreen}
+%     \drawgrid{1}{0}{3}{2}{Opurple}
+%     \drawgrid{1.5}{0}{3}{2}{Ogold}
+% \end{scope}
+% \draw [decorate, decoration={brace, amplitude=6pt, mirror, raise=4pt}, thick, gray] (17.6, 0.1) -- (19.6, 0.1) 
+%     node [midway, yshift=-0.7cm, matrix_label, black] {$3 \times 512$ restored};
+
+% % LINEAR LAYER
+% \draw[arrow] (23.2, 0.45) -- (24.7, 0.45);
+% \node[draw=LinearBox!50, fill=LinearBox!15, minimum width=3.8cm, minimum height=1.4cm, thick] (FLL) at (26.8, 0.45) {\textbf{Final Linear Layer}};
+% \node[math_node, LinearBox, anchor=south] at (FLL.north) {$W_O$};
+% \node[matrix_label, black] at (26.8, -0.6) {$512 \times 512$};
+% \node[math_node, scale=0.8, black!70] at (26.8, -1.1) {$Y = \text{Concat}(O_1, \dots, O_4) W_O$};
+
+% % --- 7. FINAL OUTPUT ---
+% \draw[arrow] (28.8, 0.45) -- (30.3, 0.45);
+% \node[math_node, text=black!90] at (32.2, 1.6) {Final Output $\in \mathbb{R}^{3 \times 512}$};
+
+% \begin{scope}[shift={(30.5, 0.1)}]
+%     \foreach \x/\c in {0/Ocyan, 0.25/Ogreen, 0.5/Opurple, 0.75/Ogold, 1/Ocyan, 1.25/Ogreen, 1.5/Opurple, 1.75/Ogold, 2/Ocyan, 2.25/Ogreen, 2.5/Opurple, 2.75/Ogold} {
+%         \fill[\c!50] (\x, 0) rectangle +(.25, 0.75);
+%         \draw[\c!70, ultra thin] (\x, 0) rectangle +(.25, 0.75);
+%     }
+%     \draw[gray!80, thick] (0,0) rectangle (3.0, 0.75);
+% \end{scope}
+
+% \node[font=\Large\bfseries, Ogold!90!black] at (32, -0.6) {Multiple Perspectives.};
+
+% \end{tikzpicture}
+
+\begin{tikzpicture}[
+    % Set a light background for the entire canvas
+    background rectangle/.style={fill=gray!5}, show background rectangle,
+    scale=0.75, every node/.style={transform shape},
+    % Define Styles
+    arrow/.style={-{Stealth[scale=1.2]}, thick, draw=gray!70},
+    label_node/.style={font=\small\sffamily, text=black!80},
+    math_node/.style={font=\small},
+    matrix_label/.style={font=\scriptsize, text=gray!80}
+]
+
+% Color Gradings (RGB)
+\definecolor{Xblue}{RGB}{104, 187, 196}
+\definecolor{Qyellow}{RGB}{226, 181, 74}
+\definecolor{Kgreen}{RGB}{106, 149, 99}
+\definecolor{Vred}{RGB}{198, 93, 76}
+\definecolor{Hpurple}{RGB}{120, 103, 161}
+\definecolor{Ocyan}{RGB}{90, 162, 183}
+\definecolor{Ogreen}{RGB}{112, 148, 93}
+\definecolor{Opurple}{RGB}{115, 95, 145}
+\definecolor{Ogold}{RGB}{181, 148, 81}
+\definecolor{LinearBox}{RGB}{60, 45, 85} 
+
+% Command for Color Grid
+\newcommand{\drawgrid}[5]{ % {x}{y}{rows}{cols}{color}
+    \begin{scope}[shift={(#1,#2)}]
+        \fill[#5!15] (0,0) rectangle (#4*0.25, #3*0.25);
+        \draw[#5, ultra thin, step=0.25cm] (0,0) grid (#4*0.25, #3*0.25);
+        \draw[#5, thick] (0,0) rectangle (#4*0.25, #3*0.25);
+    \end{scope}
+}
+
+% Input X
+\node[math_node, text=Xblue!80!black] (X_label) at (0, 1.3) {$X \in \mathbb{R}^{3 \times 512}$};
+\drawgrid{-0.75}{0}{3}{6}{Xblue}
+\coordinate (X_out) at (0.75, 0.375);
+
+% Q, K, V Projections
+\coordinate (Q_pos) at (2.5, 2.8);
+\coordinate (K_pos) at (2.5, 0);
+\coordinate (V_pos) at (2.5, -2.8);
+
+\draw[arrow, Qyellow] (X_out) -- (2.5, 3.175);
+\draw[arrow, Kgreen] (X_out) -- (2.5, 0.375);
+\draw[arrow, Vred] (X_out) -- (2.5, -2.425);
+
+\node[math_node, text=Qyellow!70!black] at (3.25, 4.1) {$Q = XW_Q$};
+\drawgrid{2.5}{2.8}{3}{6}{Qyellow}
+\node[matrix_label] at (3.25, 2.5) {$3 \times 512$};
+
+\node[math_node, text=Kgreen!70!black] at (3.25, 1.3) {$K = XW_K$};
+\drawgrid{2.5}{0}{3}{6}{Kgreen}
+\node[matrix_label] at (3.25, -0.3) {$3 \times 512$};
+
+\node[math_node, text=Vred!70!black] at (3.25, -1.5) {$V = XW_V$};
+\drawgrid{2.5}{-2.8}{3}{6}{Vred}
+\node[matrix_label] at (3.25, -3.1) {$3 \times 512$};
+
+% The Split
+\node[label_node, Qyellow!80!black] at (9.2, 4.8) {$512 \div 4 = 128$ dim per head};
+
+\foreach \i/\col/\y/\hname in {1/Ocyan/3/H_1, 2/Kgreen/1/H_2, 3/Opurple/-1/H_3, 4/Ogold/-3/H_4} {
+    \draw[arrow] (4.0, 0.375) -- (7.3, \y + 0.375);
+    
+    \node[draw=\col, fill=white, rounded corners=2pt, minimum width=3.8cm, minimum height=1.3cm] (HB\i) at (9.2, \y+0.4) {};
+    \node[math_node, \col!80!black, anchor=south] at (HB\i.north) {$\hname$};
+    
+    \drawgrid{7.8}{\y+0.15}{3}{3}{Qyellow}
+    \drawgrid{8.8}{\y+0.15}{3}{3}{Kgreen}
+    \drawgrid{9.8}{\y+0.15}{3}{3}{Vred}
+    
+    \node[matrix_label, scale=0.8] at (9.2, \y-0.15) {$3 \times 128$};
+}
+
+% Attention Output O_i
+\node[math_node, black!90] at (14.58, 5.5) {$\text{softmax}\left( \frac{Q_i K_i^T}{\sqrt{d_k}} \right) V_i$};
+
+\foreach \i/\col/\y in {1/Ocyan/3, 2/Ogreen/1, 3/Opurple/-1, 4/Ogold/-3} {
+    \draw[arrow] (11.1, \y+0.375) -- (14.2, \y+0.375);
+    \node[math_node, \col!80!black] at (14.58, \y+1.1) {$O_\i$};
+    
+    \begin{scope}[shift={(14.2, \y)}]
+        \foreach \r in {0,1,2} \foreach \c in {0,1,2} {
+            \fill[\col!\the\numexpr 30 + \r*15 + \c*10\relax] (\c*0.25, \r*0.25) rectangle +(.25,.25);
+        }
+        \draw[\col, ultra thin, step=0.25] (0,0) grid (0.75, 0.75);
+        \draw[\col, thick] (0,0) rectangle (0.75, 0.75);
+    \end{scope}
+    \node[matrix_label, scale=0.8] at (14.58, \y-0.3) {$3 \times 128$};
+    
+    \draw[arrow, gray!60] (14.95, \y+0.375) -- (17.6, 0.475);
+}
+
+\node[label_node, Ogold!80!black] at (14.58, -4.5) {4 independent contextual perspectives};
+
+% Concatenation
+\node[math_node, black!90] at (18.6, 1.6) {$\text{Concat}([O_1, O_2, O_3, O_4])$};
+\begin{scope}[shift={(17.6, 0.1)}]
+    \drawgrid{0}{0}{3}{2}{Ocyan}
+    \drawgrid{0.5}{0}{3}{2}{Ogreen}
+    \drawgrid{1}{0}{3}{2}{Opurple}
+    \drawgrid{1.5}{0}{3}{2}{Ogold}
+\end{scope}
+\draw [decorate, decoration={brace, amplitude=6pt, mirror, raise=4pt}, thick, gray] (17.6, 0.1) -- (19.6, 0.1) 
+    node [midway, yshift=-0.7cm, matrix_label, black] {$3 \times 512$ restored};
+
+% Routes from right side of Concat, cleanly down around the perspectives label, and back to the left
+\draw[arrow, rounded corners=6pt, draw=gray!50] (19.6, 0.475) -- (20.5, 0.475) -- (20.5, -5.5) -- (1.5, -5.5) -- (1.5, -7.5) -- (2.1, -7.5);
+
+% Final Layer
+\node[draw=LinearBox!50, fill=LinearBox!15, minimum width=3.8cm, minimum height=1.4cm, thick] (FLL) at (4.0, -7.5) {\textbf{Final Linear Layer}};
+\node[math_node, LinearBox, anchor=south] at (FLL.north) {$W_O$};
+\node[matrix_label, black] at (4.0, -8.6) {$512 \times 512$};
+\node[math_node, scale=0.8, black!70] at (4.0, -9.1) {$Y = \text{Concat}(O_1, \dots, O_4) W_O$};
+
+% Final Output
+\draw[arrow] (5.9, -7.5) -- (8.0, -7.5);
+\node[math_node, text=black!90] at (9.5, -6.3) {Final Output $\in \mathbb{R}^{3 \times 512}$};
+
+\begin{scope}[shift={(8.0, -7.875)}]
+    \foreach \x/\c in {0/Ocyan, 0.25/Ogreen, 0.5/Opurple, 0.75/Ogold, 1/Ocyan, 1.25/Ogreen, 1.5/Opurple, 1.75/Ogold, 2/Ocyan, 2.25/Ogreen, 2.5/Opurple, 2.75/Ogold} {
+        \fill[\c!50] (\x, 0) rectangle +(.25, 0.75);
+        \draw[\c!70, ultra thin] (\x, 0) rectangle +(.25, 0.75);
+    }
+    \draw[gray!80, thick] (0,0) rectangle (3.0, 0.75);
+\end{scope}
+
+\node[font=\Large\bfseries, Ogold!90!black] at (9.5, -8.7) {Multiple Perspectives.};
+
+\end{tikzpicture}

@@ -1,0 +1,56 @@
+\begin{tikzpicture}[
+    >=Stealth,
+    math/.style={font=\small},
+    wordbox/.style={draw=gray, inner sep=2pt, font=\scriptsize\sffamily},
+    label/.style={font=\tiny}
+]
+
+    % --- 1. CONFIGURATION ---
+    \def\xscale{1.5}    % Tightened to fit page
+    \def\yscale{1.0}    % Vertical spacing
+    \def\gridstart{0.8} % The X-coordinate where the grid starts
+
+    \definecolor{keycolor}{RGB}{0, 120, 120}
+    \definecolor{querycolor}{RGB}{160, 140, 0}
+    \definecolor{linecolor}{RGB}{225, 225, 225}
+
+    % GRID LINES
+    % Vertical Lines
+    \foreach \x in {0,...,8} {
+        \draw[linecolor] ({(\x+\gridstart)*\xscale}, 4.2) -- ({(\x+\gridstart)*\xscale}, -7.4);
+    }
+    % Horizontal Lines
+    \foreach \y in {1,...,8} {
+        \draw[linecolor] (-2.5, {-\y*\yscale + 2.0}) -- (8.8*\xscale, {-\y*\yscale + 2.0});
+    }
+    % Main Bold Separator
+    \draw[thick] (-2.5, 1.0) -- (8.8*\xscale, 1.0);
+    \draw[thick] (1.2, 4.2) -- (1.2, -7.4*\yscale);
+
+    % --- 3. TOP SECTION (QUERIES) ---
+    \foreach \word [count=\idx] in {lift, and, thrust, must, overcome, weight, and, drag} {
+        \node[wordbox] (W\idx) at ({(\idx+\gridstart-0.5)*\xscale}, 3.6) {\word};
+        \node[math] (E\idx) at ({(\idx+\gridstart-0.5)*\xscale}, 2.8) {$\vec{\mathbf{E}}_{\idx}$};
+        \node[math, querycolor] (Q\idx) at ({(\idx+\gridstart-0.5)*\xscale}, 1.7) {$\vec{\mathbf{Q}}_{\idx}$};
+        
+        \draw[->] (W\idx) -- (E\idx);
+        \draw[->] (E\idx) -- node[right, label, black] {$W_Q$} (Q\idx);
+    }
+
+    % --- 4. ROWS (KEYS & GRID) ---
+    \foreach \word [count=\idx] in {lift, and, thrust, must, overcome, weight, and, drag} {
+        
+        % Row Labels (Word -> E -> K)
+        % These are placed as individual nodes to avoid nesting errors
+        \node[wordbox, anchor=east] at (-1.4, {-\idx*\yscale + 1.5}) {\word};
+        \node[math, anchor=west] at (-1.3, {-\idx*\yscale + 1.5}) {$\to \vec{\mathbf{E}}_{\idx} \xrightarrow{W_k} \textcolor{keycolor}{\vec{\mathbf{K}}_{\idx}}$};
+
+        % Dot Product Cells
+        \foreach \col in {1,...,8} {
+            \node[math, fill=white, inner sep=1pt] at ({(\col+\gridstart-0.5)*\xscale}, {-\idx*\yscale + 1.5}) {
+                \textcolor{keycolor}{$\vec{\mathbf{K}}_{\idx}$} $\cdot$ \textcolor{querycolor}{$\vec{\mathbf{Q}}_{\col}$}
+            };
+        }
+    }
+
+\end{tikzpicture}

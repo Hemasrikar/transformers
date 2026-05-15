@@ -1,0 +1,50 @@
+
+\begin{tikzpicture}[
+    font=\sffamily,
+    cell/.style={
+        rectangle, 
+        draw=gray!50, 
+        minimum width=1.1cm, 
+        minimum height=0.8cm, 
+        inner sep=0pt, 
+        anchor=center,
+        align=center
+    },
+    masked/.style={text=red!70!black},
+    matrix style/.style={
+        matrix of nodes, % This requires the 'matrix' library
+        nodes={cell},
+        column sep=-\pgflinewidth,
+        row sep=-\pgflinewidth,
+        nodes in empty cells
+    }
+]
+
+    % --- Left Matrix ---
+    \node[align=center, font=\large\bfseries] (Title1) at (0, 3.5) {Unnormalized \\ Attention Pattern};
+    
+    \matrix (M1) [matrix style] at (0,0) {
+        +3.53 & +0.80 & +1.96 & +4.48 & +3.74 & -1.95 \\
+        |[masked]| $-\infty$ & -0.30 & -0.21 & +0.82 & +0.29 & +2.91 \\
+        |[masked]| $-\infty$ & |[masked]| $-\infty$ & +0.89 & +0.67 & +2.99 & -0.41 \\
+        |[masked]| $-\infty$ & |[masked]| $-\infty$ & |[masked]| $-\infty$ & +1.31 & +1.73 & -1.48 \\
+        |[masked]| $-\infty$ & |[masked]| $-\infty$ & |[masked]| $-\infty$ & |[masked]| $-\infty$ & +3.07 & +2.94 \\
+        |[masked]| $-\infty$ & |[masked]| $-\infty$ & |[masked]| $-\infty$ & |[masked]| $-\infty$ & |[masked]| $-\infty$ & +0.31 \\
+    };
+
+    % --- Softmax Arrow ---
+    \draw[thick, -{Stealth[length=3mm]}] (3.5, 0) -- (5.5, 0) node[midway, above=2pt] {\large softmax};
+
+    % --- Right Matrix ---
+    \node[align=center, font=\large\bfseries] (Title2) at (9, 3.5) {Normalized \\ Attention Pattern};
+
+    \matrix (M2) [matrix style] at (9,0) {
+        1.00 & 0.75 & 0.69 & 0.92 & 0.46 & 0.00 \\
+        |[masked]| 0.00 & 0.25 & 0.08 & 0.02 & 0.01 & 0.46 \\
+        |[masked]| 0.00 & |[masked]| 0.00 & 0.24 & 0.02 & 0.22 & 0.02 \\
+        |[masked]| 0.00 & |[masked]| 0.00 & |[masked]| 0.00 & 0.04 & 0.06 & 0.01 \\
+        |[masked]| 0.00 & |[masked]| 0.00 & |[masked]| 0.00 & |[masked]| 0.00 & 0.24 & 0.48 \\
+        |[masked]| 0.00 & |[masked]| 0.00 & |[masked]| 0.00 & |[masked]| 0.00 & |[masked]| 0.00 & 0.03 \\
+    };
+
+\end{tikzpicture}
