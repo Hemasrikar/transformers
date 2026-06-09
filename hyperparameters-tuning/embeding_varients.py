@@ -25,7 +25,8 @@ class Config:
 	train_path: Path = Path("../data/processed/train.parquet")
 	val_path: Path = Path("../data/processed/val.parquet")
 	test_path: Path = Path("../data/processed/test.parquet")
-	raw_path: Path = Path("../data/Global Factor_EM.parquet")
+	country_lookup_path: Path = Path("../data/processed/country_lookup.parquet")
+	col_metadata_path: Path = Path("../data/processed/column_metadata.json")
 	results_dir: Path = Path("../results")
 
 	d_model: int = 64
@@ -107,24 +108,23 @@ target_cols = ["target_3m", "target_6m", "target_12m"]
 k0_miss_cols = [f"{c}_miss" for c in k0_chars]
 k1_miss_cols = [f"{c}_miss" for c in k1_chars]
 
-raw_ids = pd.read_parquet(cfg.raw_path, columns=["id", "eom", "excntry"])
-raw_ids["eom"] = pd.to_datetime(raw_ids["eom"])
-country_codes = sorted(raw_ids["excntry"].unique())
-country_to_id = {c: i for i, c in enumerate(country_codes)}
-raw_ids["country_id"] = raw_ids["excntry"].map(country_to_id).astype(np.int16)
-country_lookup = raw_ids[["id", "eom", "country_id"]].drop_duplicates()
-del raw_ids
-gc.collect()
+with open(cfg.col_metadata_path, "r") as f:
+	_col_meta = json.load(f)
+country_to_id = _col_meta["country_to_id"]
+country_codes = _col_meta["country_codes"]
+
+country_lookup = pd.read_parquet(cfg.country_lookup_path)
+country_lookup["eom"] = pd.to_datetime(country_lookup["eom"])
 print(f"K0: {len(k0_chars)}, K1: {len(k1_chars)} (x6 = {len(k1_feature_cols)}), Countries: {len(country_codes)}\n")
 
 
 class CrossSectionalDataset(Dataset):
-	def __init__(self, df, k0_cols, k1_cols, k0_miss, k1_miss, target_cols_list, country_lookup, max_firms):
+	def __init__(self, df, k0_cols, k1_cols, k0_miss, k1_miss, target_cols_list, country_lookup_param, max_firms):
 		self.max_firms = max_firms
 		dates = sorted(df["eom"].unique())
 		self.monthly_data = []
 		n_k1 = len(k1_chars)
-		df = df.merge(country_lookup, on=["id", "eom"], how="left")
+		df = df.merge(country_lookup_param, on=["id", "eom"], how="left")
 		df["country_id"] = df["country_id"].fillna(-1).astype(np.int16)
 
 		for date in dates:
@@ -159,12 +159,12 @@ class CrossSectionalDataset(Dataset):
 	def __getitem__(self, idx):
 		return self.monthly_data[idx]
 
-def load_split(path, k0_cols, k1_cols, k0_miss, k1_miss, target_cols_list, country_lookup, max_firms):
+def load_split(path, k0_cols, k1_cols, k0_miss, k1_miss, target_cols_list, country_lookup_param, max_firms):
 	required = ["id", "eom"] + k0_cols + k1_cols + k0_miss + k1_miss + target_cols_list
 	df = pd.read_parquet(path, columns=required)
 	for col in k0_cols + k1_cols + k0_miss + k1_miss:
 		df[col] = df[col].fillna(0.0)
-	return CrossSectionalDataset(df, k0_cols, k1_cols, k0_miss, k1_miss, target_cols_list, country_lookup, max_firms)
+	return CrossSectionalDataset(df, k0_cols, k1_cols, k0_miss, k1_miss, target_cols_list, country_lookup_param, max_firms)
 
 print("Loading datasets...")
 shared_train_ds = load_split(cfg.train_path, k0_feature_cols, k1_feature_cols, k0_miss_cols, k1_miss_cols, target_cols, country_lookup, cfg.max_firms)
@@ -284,7 +284,6 @@ class SparseMultiHeadAttention(nn.Module):
 		self.w_v = nn.Linear(d_model, d_model)
 		self.w_o = nn.Linear(d_model, d_model)
 		self.dropout = nn.Dropout(dropout)
-
 	def forward(self, x):
 		n_firms = x.shape[0]
 		x = x.unsqueeze(0)
@@ -292,8 +291,8 @@ class SparseMultiHeadAttention(nn.Module):
 		k = self.w_k(x).view(1, n_firms, self.n_heads, self.d_k).transpose(1, 2)
 		v = self.w_v(x).view(1, n_firms, self.n_heads, self.d_k).transpose(1, 2)
 		scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.d_k)
-		top_k = min(self.top_k, n_firms)
-		topk_vals, _ = scores.topk(top_k, dim=-1)
+		k = min(self.top_k, n_firms)
+		topk_vals, _ = scores.topk(k, dim=-1)
 		threshold = topk_vals[..., -1:].detach()
 		mask = scores < threshold
 		scores = scores.masked_fill(mask, float("-inf"))
@@ -308,13 +307,12 @@ class TransformerBlock(nn.Module):
 		super().__init__()
 		self.norm1 = nn.LayerNorm(d_model)
 		self.attention = SparseMultiHeadAttention(d_model, n_heads, top_k, dropout)
-		self.grn = GRN(d_model, d_ff, dropout)
-
+		self.grn_module = GRN(d_model, d_ff, dropout)
 	def forward(self, x):
 		normed = self.norm1(x)
 		attn_out, attn_weights = self.attention(normed)
 		x = x + attn_out
-		x = self.grn(x)
+		x = self.grn_module(x)
 		return x, attn_weights
 
 class AttentiveAggregation(nn.Module):
@@ -359,7 +357,7 @@ class FirmScoreHead(nn.Module):
 	def forward(self, z):
 		return self.net(z).squeeze(-1)
 
-class CrossFirmTransformer(nn.Module):
+class PeerContextTransformer(nn.Module):
 	def __init__(self, config):
 		super().__init__()
 		self.config = config
@@ -420,7 +418,7 @@ class CrossFirmTransformer(nn.Module):
 		}
 
 
-def compute_loss(output, targets, valid_masks, config):
+def compute_dual_path_loss(output, targets, valid_masks, config):
 	main_loss = torch.tensor(0.0, device=output["scores_3m"].device)
 	aux_loss = torch.tensor(0.0, device=output["scores_3m"].device)
 	for horizon, weight in [("3m", config.lambda_3m), ("6m", config.lambda_6m), ("12m", config.lambda_12m)]:
@@ -476,7 +474,7 @@ def objective(trial, variant, gpu_id):
 	)
 	sys.stdout.flush()
 
-	model = CrossFirmTransformer(config).to(target_device)
+	model = PeerContextTransformer(config).to(target_device)
 	optimizer = torch.optim.AdamW(model.parameters(), lr=config.learning_rate, weight_decay=config.weight_decay)
 	scaler = torch.GradScaler()
 	best_val_sharpe = -float("inf")
@@ -500,7 +498,7 @@ def objective(trial, variant, gpu_id):
 				optimizer.zero_grad(set_to_none=True)
 				with torch.autocast(device_type="cuda"):
 					output = model(k0, k1, k0_m, k1_m, cids)
-					loss = compute_loss(output, targets, valid_masks, config)
+					loss = compute_dual_path_loss(output, targets, valid_masks, config)
 
 				if torch.isnan(loss) or torch.isinf(loss):
 					nan_detected = True
@@ -570,7 +568,7 @@ if __name__ == "__main__":
 	variants = ["linear", "per_feature", "ple", "periodic", "fourier"]
 	n_trials = 50
 	all_variant_results = {}
-	DB_URL = "sqlite:///hpt_dual_path.db"
+	db_url = "sqlite:///hpt_dual_path.db"
 
 	for variant in variants:
 		print(f"Tuning Sharpe Optimisation: {variant.upper()}")
@@ -592,7 +590,7 @@ if __name__ == "__main__":
 			direction="maximize",
 			pruner=optuna.pruners.MedianPruner(n_startup_trials=4, n_warmup_steps=6),
 			study_name=f"hpt_dual_{variant}",
-			storage=DB_URL,
+			storage=db_url,
 			load_if_exists=True
 		)
 		study.optimize(variant_objective, n_trials=n_trials, callbacks=[trial_callback], n_jobs=1)
