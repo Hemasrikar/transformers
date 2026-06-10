@@ -35,6 +35,12 @@ to install all the required pacakges for this project
 
 ## Data Extraction
 
-The branch `data` contains the jupyter notebook and different virtual environment configuration satisfying the python version and dependencies of the `wrds` package. The reason for using a python script instead of wrds website to query and download data is becasuse it is not reliable to download large datasets. 
+The branch `data` contains the jupyter notebooks related data extraction, data processing and validation.
 
-Run `uv sync` again after checking out to the wrds/data branch to install dependencies required for the data extraction.
+
+> [!NOTE]
+> Other branches contrains different versions of Architecture, they are experimental to find the best performing model.
+
+
+
+
