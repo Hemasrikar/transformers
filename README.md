@@ -10,17 +10,6 @@ The [Company Data csv](csv_data\company_data_info.csv) file all the linking data
 
 ### Train, Test, Validation Split
 
-<<<<<<< HEAD
-The branch `data` contains the jupyter notebooks related data extraction, data processing and validation.
-
-
-> [!NOTE]
-> Other branches contrains different versions of Architecture, they are experimental to find the best performing model.
-
-
-
-
-=======
 All the data split will be done prior to the data processing, and it is done based on the time period. 
 > Train Period: 1995 - 2015
 > Validation Period: 2016 - 2020
@@ -37,4 +26,3 @@ The features are removed, if their respective column has more than 30% missing d
 
 > [!IMPORTANT]
 > Run `data_summary_validation` notebook after the `data_processing` to make sure that data has been processed exactly as it was intended.
->>>>>>> data

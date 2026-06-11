@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Python-generated files
 __pycache__/
 *.py[oc]
@@ -12,8 +11,3 @@ wheels/
 
 data/
 .DS_Store
-=======
-.DS_Store
-data/
-.venv
->>>>>>> data
