@@ -1,2 +1,6 @@
+<<<<<<< HEAD
 notebooks/** linguist-generated=true
 notebooks/** linguist-detectable=false
+=======
+*.ipynb filter=nbstripout
+>>>>>>> origin/data-timelags
