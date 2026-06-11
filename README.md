@@ -1,3 +1,11 @@
+# Transformers for Asset Pricing
+
+
+> [!Note]
+> There are four branches including the main branch in this repository. The `main` branch contains all main impplementation codebase. The branche `nonlinear/time2vec` has a architecture involving Time2Vec encoding and periodic lag data. `dualapproach` has different a dual appraoch architecture with MLP layers before the embedding layer, along with Time2Vec encoding. 
+> 
+> The `thesis\resources` contain diagrams for the dissertation.
+
 ## Data Processing
 
 This branch contains the code base for all the data processing needed from this project.
@@ -17,12 +25,5 @@ All the data split will be done prior to the data processing, and it is done bas
 
 The features are removed, if their respective column has more than 30% missing data. This is processed on train dataset and the kept features are used to filter the data in the validation and test datasets. After filtering the features, the train dataset will be processed. 
 
-
-> [!CAUTION]
-> The data_processing notebook is run on a device with 32 GB ram. During the data process, the python has consumed more than ~29 GB data and complete 32 GB ram was utilised with ~10 GB swap memory as the complete dataset is loaded onto your ram. So, with that in mind, caution need be maintained when runnig the notebook on device with less resources.
-
 > [!NOTE]
 > The `csv_to_parquet` notebook is just to convert the csv files downloaded from the wrds to parquet, since some of the query form does not have parquet file format as an option. Parquet format is foavoured becuase it is smaller in size when compared to csv and faster to work with.
-
-> [!IMPORTANT]
-> Run `data_summary_validation` notebook after the `data_processing` to make sure that data has been processed exactly as it was intended.
