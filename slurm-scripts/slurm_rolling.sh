@@ -9,7 +9,11 @@
 #SBATCH --error=logs/rolling_%j.err
 
 module purge
-module load GCC/13.3.0 CUDA/13.0.0
+
+cd /springbrook/share/wbs/bstvvz
+
+# activate venv
+source .venv/bin/activate
 
 mkdir -p logs
-uv run python src/nonlinear_transformer_rolling.py
+python src/nonlinear_transformer_rolling.py
