@@ -28,12 +28,12 @@ device = torch.device("cuda")
 
 @dataclass
 class Config:
-	train_path: Path = Path("../data/processed-IN/train.parquet")
-	val_path: Path = Path("../data/processed-IN/val.parquet")
-	test_path: Path = Path("../data/processed-IN/test.parquet")
-	country_lookup_path: Path = Path("../data/processed-IN/country_lookup.parquet")
-	col_metadata_path: Path = Path("../data/processed-IN/column_metadata.json")
-	results_dir: Path = Path("../results")
+	train_path: Path = Path("data/processed/train.parquet")
+	val_path: Path = Path("data/processed/val.parquet")
+	test_path: Path = Path("data/processed/test.parquet")
+	country_lookup_path: Path = Path("data/processed/country_lookup.parquet")
+	col_metadata_path: Path = Path("data/processed/column_metadata.json")
+	results_dir: Path = Path("results")
 
 	d_model: int = 64
 	n_heads: int = 4

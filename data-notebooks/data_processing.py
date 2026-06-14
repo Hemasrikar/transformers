@@ -34,8 +34,8 @@ warnings.filterwarnings('ignore')
 
 ## Configuration
 
-data_path = Path(r'..\data\Global Factor_EM.parquet')
-output_dir = Path(r'..\data\processed')
+data_path = Path(r'data\Global Factor_IND.parquet')
+output_dir = Path(r'data\processed')
 output_dir.mkdir(parents=True, exist_ok=True)
 
 TRAIN_END = '2015-12-31'
@@ -130,7 +130,8 @@ print(f"Metadata columns: {len(METADATA_COLS)}")
 print(f"K0 (market-based): {len(K0_CHARACTERISTICS)}")
 
 ## Load Data
-# Coerce string-encoded numeric columns (`divspc1m_me`, `divspc12m_me`) and downcast all characteristic float64 columns to float32, reducing in-memory size by approximately 50 percent.
+# Coerce string-encoded numeric columns (`divspc1m_me`, `divspc12m_me`) 
+# and downcast all characteristic float64 columns to float32, reducing in-memory size by approximately 50 percent.
 
 def load_data(path):
     print("Loading data")
@@ -161,7 +162,9 @@ df = load_data(data_path)
 
 ## Sort Panel and Deduplicate
 # 
-# Sort by `(id, eom)` and remove any duplicate `(id, eom)` observations. Duplicates can arise when annual and quarterly accounting update records overlap for the same security in the same month. A unique panel is required for the indexed lag lookup in Step 6 and for the cross-sectional normalisation in Step 9 to behave correctly.
+# Sort by `(id, eom)` and remove any duplicate `(id, eom)` observations. 
+# Duplicates can arise when annual and quarterly accounting update records overlap for the same security in the same month. 
+# A unique panel is required for the indexed lag lookup in Step 6 and for the cross-sectional normalisation in Step 9 to behave correctly.
 
 
 def sort_panel(df):
@@ -263,7 +266,8 @@ assert check_mean < 2.0, (
 )
 
 ## Classify Characteristics
-# K0 is the explicitly listed set of market-based characteristics. K1 is the complement: all remaining columns that are not metadata, return columns, or targets.
+# K0 is the explicitly listed set of market-based characteristics. 
+# K1 is the complement: all remaining columns that are not metadata, return columns, or targets.
 
 def classify_characteristics(df, metadata_cols, k0_list):
     exclude = set(metadata_cols) | {c for c in df.columns if c.startswith('target_')}
@@ -411,7 +415,9 @@ print(f"Test:{test.shape[0]:,} rows")
 
 ## Binary Missingness Flags
 # For each original (non-lag) characteristic, a binary flag column (suffix `_miss`) is added. 
-# Flags are constructed **before** any imputation so that the model receives the genuine missingness signal as a separate input alongside the characteristic value. This allows the attention mechanism to learn whether the absence of a characteristic carries predictive content.
+# Flags are constructed **before** any imputation so that the model receives the genuine missingness 
+# signal as a separate input alongside the characteristic value. 
+# This allows the attention mechanism to learn whether the absence of a characteristic carries predictive content.
 
 def add_missingness_flags(df, orig_char_cols):
     flags = (df[orig_char_cols].isnull().astype('float32').rename(columns={c: f'{c}_miss' for c in orig_char_cols}))
