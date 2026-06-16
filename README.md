@@ -1,20 +1,11 @@
-# Transformers for Asset Pricing
+# Nonlinear Transformers for Asset Pricing
 
+This branch contains original Nonlinear Transformer model, that was introduced by Kelly.
 
-> [!Note]
-> There are four branches including the main branch in this repository. The `main` branch contains all main impplementation codebase. The branche `nonlinear/time2vec` has a architecture involving Time2Vec encoding and periodic lag data. `dualapproach` has different a dual appraoch architecture with MLP layers before the embedding layer, along with Time2Vec encoding. 
-> 
-> The `thesis\resources` contain diagrams for the dissertation.
+## Architecture
+The `src` contains two different implementation. `nonlinear_transformer_rolling.py` contains codebase that train the model on rolling window methodology, which is same as implemented by Kelly. The file `nonlinear_transformer.py` contains model that train based on the following dataset split.
 
-## Data Processing
-
-This branch contains the code base for all the data processing needed from this project.
-
-All the data is obtained from WRDS (Wharton Research Data Services).
-
-The [Company Data csv](csv_data\company_data_info.csv) file all the linking data from Compustat and CRSP. The datasets are seperated in three ways: Emerging Markets, USA market, and all the markets in the world. Primarily, we will work with the EM dataset.
-
----
+Both the codebases contain data processing code included. So, they can be run standalone on the raw datasets.
 
 ### Train, Test, Validation Split
 
@@ -25,5 +16,11 @@ All the data split will be done prior to the data processing, and it is done bas
 
 The features are removed, if their respective column has more than 30% missing data. This is processed on train dataset and the kept features are used to filter the data in the validation and test datasets. After filtering the features, the train dataset will be processed. 
 
-> [!NOTE]
-> The `csv_to_parquet` notebook is just to convert the csv files downloaded from the wrds to parquet, since some of the query form does not have parquet file format as an option. Parquet format is foavoured becuase it is smaller in size when compared to csv and faster to work with.
+> [!Note]
+> There are five branches including the main branch in this repository. 
+> - The `main` branch contains all the codebase of the final architecture after experimentation. 
+> - `dualapproach` branch has different a dual appraoch architecture with MLP layers before the embedding layer, and other additional statistical embedding.
+> -  `nonlinear/original` has the original kelly proposed architecture with different embedding varisnts.
+> - The branch `nonlinear/time2vec` has a architecture involving Time2Vec encoding and periodic lag data. 
+> - The `thesis\resources` contain diagrams for the dissertation.
+
