@@ -32,12 +32,12 @@ warnings.filterwarnings('ignore')
 # Configuration
 
 
-country = 'IND'
+country = 'EM'
 
 # Path to raw JKP parquet file. Note the space in the filename.
-raw_path = Path('../data/Global Factor_IND.parquet')
+raw_path = Path(f'data/Global Factor_{country}.parquet')
 
-results_dir = Path('../results') / country / 'rolling'
+results_dir = Path('results') / country / 'rolling'
 
 # Data processing
 coverage_threshold = 0.70

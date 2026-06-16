@@ -28,12 +28,12 @@ warnings.filterwarnings('ignore')
 
 # Configuration
 
-country = 'IND'
+country = 'EM'
 
 # Path to raw JKP parquet file. Note the space in the filename.
-raw_path = Path('../data/Global Factor_IND.parquet')
+raw_path = Path(f'data/Global Factor_{country}.parquet')
 
-results_dir = Path('../results') / country
+results_dir = Path('results') / country
 
 # Data processing
 coverage_threshold = 0.70
@@ -42,7 +42,7 @@ min_stocks = 30
 
 # Train / val / test split dates (inclusive upper bounds)
 train_end = '2014-12-31'
-val_end   = '2019-12-31'
+val_end = '2019-12-31'
 # test is everything after val_end
 
 # Variants to train. Remove entries to skip specific variants.
@@ -66,7 +66,7 @@ rebalance_freq = 6    # months
 tc_bps = 25   # one-way transaction cost in basis points
 
 # Columns never treated as characteristics
-load_always  = ['id', 'gvkey', 'eom', 'excntry', 'ret_exc_lead1m', 'me']
+load_always = ['id', 'gvkey', 'eom', 'excntry', 'ret_exc_lead1m', 'me']
 exclude_cols = {
 	'id', 'gvkey', 'iid', 'permno', 'permco', 'date', 'eom', 'excntry',
 	'size_grp', 'obs_main', 'exch_main', 'common', 'primary_sec',
