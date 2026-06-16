@@ -53,7 +53,8 @@ window_size = 60   # months of training data per window
 n_epochs_per_window  = 20   # training epochs per window step
 
 # Variants to train. Remove entries to skip specific variants.
-variant_list = ['identity', 'linear', 'ple', 'periodic', 'fourier', 'magnitude_dir']
+# ('identity', 'linear', 'ple', 'periodic', 'fourier')
+variant_list = ['identity']
 
 # Architecture
 n_blocks = 2
@@ -218,19 +219,10 @@ class FourierEncoder(nn.Module):
 		s = x.unsqueeze(-1) * self.freq
 		return x + (torch.sin(s) * self.a.unsqueeze(0) + torch.cos(s) * self.b.unsqueeze(0)).sum(-1)
 
-class MagnitudeDirectionEncoder(nn.Module):
-	def __init__(self, n):
-		super().__init__()
-		self.wp = nn.Parameter(torch.ones(n))
-		self.wn = nn.Parameter(torch.ones(n))
-		self.b  = nn.Parameter(torch.zeros(n))
-	def forward(self, x):
-		return F.relu(x) * self.wp - F.relu(-x) * self.wn + self.b
-
 def build_encoder(v, n):
 	enc = {
 		'identity': IdentityEncoder, 'linear': LinearEncoder, 'ple': PLEEncoder,
-		'periodic': PeriodicEncoder, 'fourier': FourierEncoder, 'magnitude_dir': MagnitudeDirectionEncoder,
+		'periodic': PeriodicEncoder, 'fourier': FourierEncoder
 	}
 	return enc[v]() if v == 'identity' else enc[v](n)
 
