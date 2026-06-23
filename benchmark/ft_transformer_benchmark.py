@@ -2,11 +2,9 @@
 Feature Tokeniser Transformer benchmark on the Emerging Markets universe.
 """
 
-import gc
 import json
 import math
 import time
-import pickle
 import warnings
 from datetime import datetime
 from pathlib import Path
@@ -17,13 +15,11 @@ import pyarrow as pa
 import pyarrow.parquet as pq
 import torch
 import torch.nn as nn
-import optuna
 from safetensors.torch import save_file as safetensors_save
 from scipy.stats import spearmanr
 import matplotlib
 import matplotlib.pyplot as plt
 
-optuna.logging.set_verbosity(optuna.logging.WARNING)
 warnings.filterwarnings('ignore')
 matplotlib.rcParams['font.size'] = 12
 
@@ -38,7 +34,7 @@ results_dir = Path('results/benchmark/ft_transformer_benchmark')
 results_dir.mkdir(parents = True, exist_ok = True)
 
 ret_col = 'ret_exc_lead1m'
-rebalance_freq = 3
+rebalance_freq = 6
 tc_bps = 25
 min_stocks = 30
 ret_clip_low = -1.0
@@ -53,8 +49,6 @@ n_epochs_train = 60
 patience = 8
 grad_clip_norm = 1.0
 
-n_trials = 30
-optuna_seed = 24
 torch_seed = 48
 
 run_timestamp = datetime.utcnow().isoformat(timespec = 'seconds')
@@ -68,6 +62,7 @@ use_amp = cuda_available
 
 
 # model classes
+
 class FeatureTokeniser(nn.Module):
     def __init__(self, n_features, d_model):
         super().__init__()
@@ -147,6 +142,8 @@ class FTPredictor:
         return np.concatenate(preds, axis = 0)
 
 
+# portfolio simulation
+
 def portfolio_metrics(rets):
     rets = np.array(rets, dtype = np.float64)
     if len(rets) == 0:
@@ -196,10 +193,8 @@ def predict_test(predictor, month_dates, all_months):
         pred = predictor.predict(m['x'])
         for k in range(len(m['ids'])):
             rows.append({
-                'eom': eom,
-                'id': m['ids'][k],
-                'prediction': float(pred[k]),
-                'realised_return': float(m['r'][k]),
+                'eom': eom, 'id': m['ids'][k],
+                'prediction': float(pred[k]), 'realised_return': float(m['r'][k]),
             })
     return pd.DataFrame(rows)
 
@@ -214,17 +209,19 @@ def rank_correlation_oos(predictor, month_dates, all_months):
         valid = np.isfinite(pred) & np.isfinite(m['r'])
         if valid.sum() < 10:
             continue
-        c, _ = spearmanr(pred[valid], m['r'][valid])
+        result = spearmanr(pred[valid], m['r'][valid])
+        c = float(result[0])  # type: ignore
         if not np.isnan(c):
-            corrs.append(float(c))
+            corrs.append(c)
     return float(np.mean(corrs)) if corrs else 0.0
 
 
 def run_quintile_simulation(predictor, month_dates, all_months):
     """
-    Quintile simulation producing both long-short and long-only portfolios.
-    Long-short, top quintile equal-weighted long, bottom quintile equal-weighted short.
-    Long-only, top quintile equal-weighted, no short leg.
+    Quintile simulation producing both the long short and the long only portfolios.
+    The long short portfolio holds the top quintile equal weighted long and the
+    bottom quintile equal weighted short. The long only portfolio holds the top
+    quintile equal weighted with no short leg.
     """
     rset = set(month_dates[::rebalance_freq])
 
@@ -328,7 +325,185 @@ def run_quintile_simulation(predictor, month_dates, all_months):
     }
 
 
+# data loading
+
+def load_data():
+    """
+    Load the three pre processed splits, identify the feature columns from the
+    train schema, build the per month rank normalised cross sections, and pool
+    the train set into a single tensor.
+    Returns a dictionary containing the pooled training tensors, the per month
+    cross section dictionary, the feature column list, the date sequences, and
+    the boundary dates of the splits.
+    """
+    train_schema = pq.read_schema(train_path)
+    non_feature = {
+        'id', 'gvkey', 'isin', 'cusip', 'permno', 'permco',
+        'eom', 'excntry', 'sic', 'naics', 'source_crsp', ret_col,
+    }
+    feature_cols = [
+        c for c in train_schema.names
+        if c not in non_feature
+        and pa.types.is_floating(train_schema.field(c).type)
+        and '_lag' not in c
+    ]
+    print(f'feature columns selected, {len(feature_cols)}')
+
+    needed = list(dict.fromkeys(
+        [c for c in ['id', 'eom', 'excntry', ret_col] + feature_cols if c in train_schema.names]
+    ))
+    train_df = pd.read_parquet(train_path, columns = needed)
+    val_df = pd.read_parquet(val_path, columns = needed)
+    test_df = pd.read_parquet(test_path, columns = needed)
+
+    for d in (train_df, val_df, test_df):
+        d['eom'] = pd.to_datetime(d['eom'])
+
+    train_end = train_df['eom'].max()
+    val_end = val_df['eom'].max()
+
+    df = pd.concat([train_df, val_df, test_df], axis = 0, ignore_index = True)
+    for col in feature_cols:
+        if col in df.columns and df[col].dtype == np.float64:
+            df[col] = df[col].astype(np.float32)
+    df[ret_col] = df[ret_col].clip(lower = ret_clip_low, upper = ret_clip_high)
+
+    print(f'train rows, {len(train_df):,}')
+    print(f'val rows, {len(val_df):,}')
+    print(f'test rows, {len(test_df):,}')
+
+    sorted_eoms = sorted(df['eom'].unique())
+    all_months = {}
+    n_feat = len(feature_cols)
+
+    for eom in sorted_eoms:
+        month = df[df['eom'] == eom].copy()
+        month = month[month[ret_col].notna()]
+        if len(month) < min_stocks:
+            continue
+        ids = month['id'].values
+        r = month[ret_col].values.astype(np.float64)
+        x = np.zeros((len(month), n_feat), dtype = np.float32)
+        for j, col in enumerate(feature_cols):
+            if col not in month.columns:
+                continue
+            vals = month[col].values.astype(np.float64)
+            valid = np.isfinite(vals)
+            if valid.sum() > 1:
+                ranked = np.asarray(pd.Series(vals[valid]).rank(pct = True).values, dtype = np.float64)
+                x[valid, j] = (ranked - 0.5).astype(np.float32)
+        all_months[eom] = {'ids': ids, 'r': r, 'x': x}
+
+    sorted_dates = sorted(all_months.keys())
+    train_dates = [d for d in sorted_dates if d <= train_end]
+    val_dates = [d for d in sorted_dates if train_end < d <= val_end]
+    test_dates = [d for d in sorted_dates if d > val_end]
+
+    x_train = np.vstack([all_months[d]['x'] for d in train_dates])
+    y_train = np.concatenate([all_months[d]['r'] for d in train_dates]).astype(np.float32)
+    print(f'x_train shape, {x_train.shape}')
+
+    return {
+        'x_train': x_train, 'y_train': y_train,
+        'all_months': all_months, 'feature_cols': feature_cols,
+        'train_dates': train_dates, 'val_dates': val_dates,
+        'test_dates': test_dates, 'train_end': train_end,
+        'val_end': val_end, 'n_feat': n_feat,
+        'n_train_rows': len(train_df), 'n_val_rows': len(val_df),
+        'n_test_rows': len(test_df),
+    }
+
+
+def save_training_data(data):
+    """
+    Save the rank normalised training observations as a csv file with one row
+    per firm month and columns for the period end date, the firm identifier,
+    the realised excess return, and the full feature set. The split metadata,
+    namely the feature column list, the date sequences, and the boundary dates,
+    is written separately as a json file.
+    """
+    feature_cols = data['feature_cols']
+    train_dates = data['train_dates']
+    val_dates = data['val_dates']
+    test_dates = data['test_dates']
+    all_months = data['all_months']
+
+    rows = []
+    for eom in train_dates:
+        m = all_months[eom]
+        for k in range(len(m['ids'])):
+            row = {
+                'eom': eom,
+                'id': m['ids'][k],
+                'realised_return': float(m['r'][k]),
+            }
+            for j, col in enumerate(feature_cols):
+                row[col] = float(m['x'][k, j])
+            rows.append(row)
+    train_data_df = pd.DataFrame(rows)
+    train_data_df.to_csv(results_dir / 'ft_training_data.csv', index = False)
+    print(f'training data saved, ft_training_data.csv, {len(train_data_df):,} rows')
+
+    with open(results_dir / 'ft_training_metadata.json', 'w') as fh:
+        json.dump({
+            'feature_cols': feature_cols, 'n_features': len(feature_cols),
+            'train_dates': [str(d) for d in train_dates], 'val_dates': [str(d) for d in val_dates],
+            'test_dates': [str(d) for d in test_dates], 'train_end': str(data['train_end']),
+            'val_end': str(data['val_end']), 'n_train_obs': int(data['x_train'].shape[0]),
+        }, fh, indent = 2)
+    print('training metadata saved, ft_training_metadata.json')
+
+
+def save_test_inputs(data):
+    """
+    Save the rank normalised inputs for every firm month in the test set as a
+    csv file. The columns mirror those of the training data file and the row
+    ordering follows the sorted period end dates.
+    """
+    feature_cols = data['feature_cols']
+    test_dates = data['test_dates']
+    all_months = data['all_months']
+
+    rows = []
+    for eom in test_dates:
+        m = all_months[eom]
+        for k in range(len(m['ids'])):
+            row = {
+                'eom': eom,
+                'id': m['ids'][k],
+                'realised_return': float(m['r'][k]),
+            }
+            for j, col in enumerate(feature_cols):
+                row[col] = float(m['x'][k, j])
+            rows.append(row)
+    test_inputs_df = pd.DataFrame(rows)
+    test_inputs_df.to_csv(results_dir / 'ft_test_inputs.csv', index = False)
+    print(f'test inputs saved, ft_test_inputs.csv, {len(test_inputs_df):,} rows')
+
+    with open(results_dir / 'ft_feature_cols.json', 'w') as fh:
+        json.dump({'feature_cols': feature_cols, 'n_features': len(feature_cols)}, fh, indent = 2)
+    with open(results_dir / 'ft_splits.json', 'w') as fh:
+        json.dump({
+            'train_start': str(data['train_dates'][0].date()),
+            'train_end': str(data['train_dates'][-1].date()),
+            'n_train_months': len(data['train_dates']),
+            'val_start': str(data['val_dates'][0].date()),
+            'val_end': str(data['val_dates'][-1].date()),
+            'n_val_months': len(data['val_dates']),
+            'test_start': str(data['test_dates'][0].date()),
+            'test_end': str(data['test_dates'][-1].date()),
+            'n_test_months': len(data['test_dates']),
+        }, fh, indent = 2)
+
+
+# training function
+
 def train_ft_transformer(params, x_train_pool, y_train_pool, val_dates_local, all_months, n_epochs, patience, device, seed, n_features):
+    """
+    Train a Feature Tokeniser Transformer with the given hyperparameters and
+    early stopping on the validation rank correlation. Returns the trained
+    model and a dictionary of training diagnostics.
+    """
     torch.manual_seed(seed)
     np.random.seed(seed)
     if device.type == 'cuda':
@@ -342,7 +517,8 @@ def train_ft_transformer(params, x_train_pool, y_train_pool, val_dates_local, al
         d_model = d_model,
         n_heads = params['n_heads'],
         n_layers = params['n_layers'],
-        d_ff = d_ff, dropout = params['dropout'],
+        d_ff = d_ff,
+        dropout = params['dropout'],
     ).to(device)
 
     optimizer = torch.optim.AdamW(
@@ -430,214 +606,107 @@ def train_ft_transformer(params, x_train_pool, y_train_pool, val_dates_local, al
     }
 
 
+# plotting helpers
+
+def configure_plot_style():
+    plt.rcParams.update({
+        "mathtext.fontset": "cm",
+        "font.size": 10,
+        "axes.spines.top": False,
+        "axes.spines.right": False,
+        "savefig.dpi": 300,
+        "savefig.bbox": "tight",
+    })
+
+
+def plot_cumulative_wealth(ls_returns_raw, ls_returns_scaled, lo_returns_raw, lo_returns_scaled):
+    configure_plot_style()
+    fig, axes = plt.subplots(1, 2, figsize = (12, 4.5))
+
+    axes[0].plot(np.cumprod(1.0 + ls_returns_scaled), label = 'long short vol', color = '#1F4E79')
+    axes[0].plot(np.cumprod(1.0 + ls_returns_raw), label = 'long short raw', color = '#1F4E79', linestyle = '--', alpha = 0.5)
+    axes[0].set_xlabel('Months from Start of Test Window')
+    axes[0].set_ylabel('Cumulative Wealth')
+    axes[0].legend(frameon = False, loc = 'upper left')
+
+    axes[1].plot(np.cumprod(1.0 + lo_returns_scaled), label = 'long only vol', color = '#8B2D2D')
+    axes[1].plot(np.cumprod(1.0 + lo_returns_raw), label = 'long only raw', color = '#8B2D2D', linestyle = '--', alpha = 0.5)
+    axes[1].set_xlabel('Months from Start of Test Window')
+    axes[1].set_ylabel('Cumulative Wealth')
+    axes[1].legend(frameon = False, loc = 'upper left')
+
+    fig.tight_layout()
+    fig.savefig(results_dir / 'ft_cumulative_wealth.pdf')
+    fig.savefig(results_dir / 'ft_cumulative_wealth.png')
+    plt.close(fig)
+    print('cumulative wealth plot saved, ft_cumulative_wealth.pdf and ft_cumulative_wealth.png')
+
+
+def plot_training_diagnostics(train_losses, val_rank_corr, best_epoch):
+    configure_plot_style()
+    fig, axes = plt.subplots(1, 2, figsize = (12, 4.5))
+
+    axes[0].plot(train_losses, color = '#1F4E79')
+    axes[0].axvline(best_epoch, color = '#8B2D2D', linestyle = '--', alpha = 0.7, label = f'best epoch, {best_epoch}')
+    axes[0].set_xlabel('Epoch')
+    axes[0].set_ylabel('Training MSE')
+    axes[0].legend(frameon = False, loc = 'upper right')
+
+    axes[1].plot(val_rank_corr, color = '#1E5F38')
+    axes[1].axvline(best_epoch, color = '#8B2D2D', linestyle = '--', alpha = 0.7, label = f'best epoch, {best_epoch}')
+    axes[1].set_xlabel('Epoch')
+    axes[1].set_ylabel('Validation Rank Correlation')
+    axes[1].legend(frameon = False, loc = 'lower right')
+
+    fig.tight_layout()
+    fig.savefig(results_dir / 'ft_training_diagnostics.pdf')
+    fig.savefig(results_dir / 'ft_training_diagnostics.png')
+    plt.close(fig)
+    print('training diagnostics plot saved, ft_training_diagnostics.pdf and ft_training_diagnostics.png')
+
+
+# main routine
 
 def main():
+    print(f'torch, {torch.__version__}')
+    print(f'cuda available, {cuda_available}')
     print(f'device, {device}')
     if cuda_available:
         print(f'device name, {cuda_device_name}')
-        print(f'mixed precision, enabled')
+        print('mixed precision, enabled')
     print(f'run timestamp utc, {run_timestamp}')
     print(f'train_path, {train_path}')
     print(f'val_path, {val_path}')
     print(f'test_path, {test_path}')
     print(f'results_dir, {results_dir}')
 
-    # feature selection from train schema
-    train_schema = pq.read_schema(train_path)
-    non_feature = {
-        'id', 'gvkey', 'isin', 'cusip', 'permno', 'permco',
-        'eom', 'excntry', 'sic', 'naics', 'source_crsp', ret_col,
-    }
-    feature_cols = [
-        c for c in train_schema.names
-        if c not in non_feature
-        and pa.types.is_floating(train_schema.field(c).type)
-        and '_lag' not in c
-    ]
-    print(f'feature columns selected, {len(feature_cols)}')
+    # load data and save the training data artefacts
+    data = load_data()
+    save_training_data(data)
+    save_test_inputs(data)
 
-    # load the pre-processed splits
-    needed = list(dict.fromkeys(
-        [c for c in ['id', 'eom', 'excntry', ret_col] + feature_cols if c in train_schema.names]
-    ))
-    train_df = pd.read_parquet(train_path, columns = needed)
-    val_df = pd.read_parquet(val_path, columns = needed)
-    test_df = pd.read_parquet(test_path, columns = needed)
+    x_train = data['x_train']
+    y_train = data['y_train']
+    all_months = data['all_months']
+    feature_cols = data['feature_cols']
+    train_dates = data['train_dates']
+    val_dates = data['val_dates']
+    test_dates = data['test_dates']
+    n_feat = data['n_feat']
 
-    for d in (train_df, val_df, test_df):
-        d['eom'] = pd.to_datetime(d['eom'])
-
-    train_end = train_df['eom'].max()
-    val_end = val_df['eom'].max()
-
-    df = pd.concat([train_df, val_df, test_df], axis = 0, ignore_index = True)
-    for col in feature_cols:
-        if col in df.columns and df[col].dtype == np.float64:
-            df[col] = df[col].astype(np.float32)
-    df[ret_col] = df[ret_col].clip(lower = ret_clip_low, upper = ret_clip_high)
-
-    print(f'train rows, {len(train_df):,}')
-    print(f'val rows, {len(val_df):,}')
-    print(f'test rows, {len(test_df):,}')
-    print(f'combined rows, {len(df):,}')
-
-    # build per-month cross-sections with rank normalisation
-    sorted_eoms = sorted(df['eom'].unique())
-    all_months = {}
-    n_feat = len(feature_cols)
-
-    for eom in sorted_eoms:
-        month = df[df['eom'] == eom].copy()
-        month = month[month[ret_col].notna()]
-        if len(month) < min_stocks:
-            continue
-        ids = month['id'].values
-        r = month[ret_col].values.astype(np.float64)
-        x = np.zeros((len(month), n_feat), dtype = np.float32)
-        for j, col in enumerate(feature_cols):
-            if col not in month.columns:
-                continue
-            vals = month[col].values.astype(np.float64)
-            valid = np.isfinite(vals)
-            if valid.sum() > 1:
-                x[valid, j] = (pd.Series(vals[valid]).rank(pct = True).values - 0.5).astype(np.float32)
-        all_months[eom] = {'ids': ids, 'r': r, 'x': x}
-
-    sorted_dates = sorted(all_months.keys())
-    print(f'processed months, {len(sorted_dates)}')
-
-    # date based split
-    train_dates = [d for d in sorted_dates if d <= train_end]
-    val_dates = [d for d in sorted_dates if train_end < d <= val_end]
-    test_dates = [d for d in sorted_dates if d > val_end]
-
-    x_train = np.vstack([all_months[d]['x'] for d in train_dates])
-    y_train = np.concatenate([all_months[d]['r'] for d in train_dates]).astype(np.float32)
-    print(f'x_train shape, {x_train.shape}')
-
-    # save training data to disk for reproducibility
-    np.savez_compressed(
-        results_dir / 'ft_training_data.npz',
-        x_train = x_train,
-        y_train = y_train,
-        feature_cols = np.array(feature_cols),
-        train_dates = np.array([str(d) for d in train_dates]),
-        val_dates = np.array([str(d) for d in val_dates]),
-        test_dates = np.array([str(d) for d in test_dates]),
-        train_end = str(train_end),
-        val_end = str(val_end),
-    )
-    print(f'training data saved, ft_training_data.npz')
-
-    # save the per month rank-normalised inputs for the test set as parquet
-    test_inputs_rows = []
-    for eom in test_dates:
-        m = all_months[eom]
-        for k in range(len(m['ids'])):
-            row = {
-                'eom': eom,
-                'id': m['ids'][k],
-                'realised_return': float(m['r'][k]),
-            }
-            for j, col in enumerate(feature_cols):
-                row[col] = float(m['x'][k, j])
-            test_inputs_rows.append(row)
-    test_inputs_df = pd.DataFrame(test_inputs_rows)
-    test_inputs_df.to_parquet(results_dir / 'ft_test_inputs.parquet', index = False)
-    print(f'test inputs saved, ft_test_inputs.parquet, {len(test_inputs_df):,} rows')
-
-    # save feature column list and split boundaries as separate json for easy reading
-    with open(results_dir / 'ft_feature_cols.json', 'w') as fh:
-        json.dump({'feature_cols': feature_cols, 'n_features': len(feature_cols)}, fh, indent = 2)
-    with open(results_dir / 'ft_splits.json', 'w') as fh:
-        json.dump({
-            'train_start': str(train_dates[0].date()),
-            'train_end': str(train_dates[-1].date()),
-            'n_train_months': len(train_dates),
-            'val_start': str(val_dates[0].date()),
-            'val_end': str(val_dates[-1].date()),
-            'n_val_months': len(val_dates),
-            'test_start': str(test_dates[0].date()),
-            'test_end': str(test_dates[-1].date()),
-            'n_test_months': len(test_dates),
-        }, fh, indent = 2)
-
-    # hyperparameter search
-    def ft_objective(trial):
-        params = {
-            'n_heads': trial.suggest_categorical('n_heads', [2, 4, 8]),
-            'd_model_per_head': trial.suggest_categorical('d_model_per_head', [8, 16, 32]),
-            'd_ff_ratio': trial.suggest_categorical('d_ff_ratio', [2, 4]),
-            'n_layers': trial.suggest_int('n_layers', 1, 4),
-            'dropout': trial.suggest_float('dropout', 0.0, 0.3),
-            'batch_size': trial.suggest_categorical('batch_size', [128, 256, 512]),
-            'learning_rate': trial.suggest_float('learning_rate', 1e-4, 3e-3, log = True),
-            'weight_decay': trial.suggest_float('weight_decay', 1e-6, 1e-3, log = True),
-        }
-        model, log = train_ft_transformer(
-            params = params,
-            x_train_pool = x_train,
-            y_train_pool = y_train,
-            val_dates_local = val_dates,
-            all_months = all_months,
-            n_epochs = n_epochs_train,
-            patience = patience,
-            device = device,
-            seed = torch_seed,
-            n_features = n_feat,
+    # load the best hyperparameters produced by ft_hpo.py
+    best_params_path = results_dir / 'ft_best_params.json'
+    if not best_params_path.exists():
+        raise FileNotFoundError(
+            f'Best parameters file not found at {best_params_path}. '
+            f'Run ft_hpo.py first to perform the hyperparameter search.'
         )
-        predictor = FTPredictor(model, device, batch_size = 1024)
-        sim = run_quintile_simulation(predictor, val_dates, all_months)
-        ls, lo = sim['long_short'], sim['long_only']
-        if len(ls['returns']) == 0:
-            return -999.0
-        ls_scaled = apply_vol_target(ls['returns'], ls['rb_indices'], target_vol, vol_lookback, max_leverage_ls)
-        lo_scaled = apply_vol_target(lo['returns'], lo['rb_indices'], target_vol, vol_lookback, max_leverage_lo)
-        ls_sharpe = portfolio_metrics(ls_scaled).get('sharpe', -999.0)
-        lo_sharpe = portfolio_metrics(lo_scaled).get('sharpe', -999.0)
+    with open(best_params_path) as fh:
+        best_data = json.load(fh)
+    ft_best = best_data['best_params']
+    print(f'best params loaded, {ft_best}')
 
-        trial.set_user_attr('best_epoch', log['best_epoch'])
-        trial.set_user_attr('n_epochs_run', log['n_epochs_run'])
-        trial.set_user_attr('best_val_rc', log['best_val_rc'])
-        trial.set_user_attr('val_sharpe_long_only', float(lo_sharpe))
-        trial.set_user_attr('d_model', log['d_model'])
-        trial.set_user_attr('d_ff', log['d_ff'])
-        trial.set_user_attr('param_count', sum(p.numel() for p in model.parameters()))
-
-        del model, predictor
-        gc.collect()
-        if cuda_available:
-            torch.cuda.empty_cache()
-        return ls_sharpe
-
-    ft_study = optuna.create_study(
-        direction = 'maximize',
-        sampler = optuna.samplers.TPESampler(seed = optuna_seed),
-        study_name = f'ft_{run_timestamp}',
-    )
-    t0 = time.time()
-    ft_study.optimize(ft_objective, n_trials = n_trials, show_progress_bar = True)
-    ft_hpo_time = time.time() - t0
-    ft_best = ft_study.best_params
-    print(f'FT best val ls sharpe, {ft_study.best_value:.4f}')
-    print(f'FT best params, {ft_best}')
-    print(f'FT hpo time, {ft_hpo_time:.1f} s')
-
-    # save Optuna study and trial history
-    ft_trials_df = ft_study.trials_dataframe()
-    ft_trials_df.to_csv(results_dir / 'ft_optuna_trials.csv', index = False)
-    with open(results_dir / 'ft_optuna_study.pkl', 'wb') as fh:
-        pickle.dump(ft_study, fh)
-    with open(results_dir / 'ft_best_params.json', 'w') as fh:
-        json.dump({
-            'best_params': ft_best,
-            'best_val_long_short_sharpe': float(ft_study.best_value),
-            'best_trial_number': int(ft_study.best_trial.number),
-            'best_trial_user_attrs': dict(ft_study.best_trial.user_attrs),
-        }, fh, indent = 2, default = float)
-    print(f'optuna study saved, {len(ft_trials_df)} trials')
-
-    # final training with best params
+    # final training with the best hyperparameters
     t0 = time.time()
     ft_model, ft_log = train_ft_transformer(
         params = ft_best,
@@ -654,14 +723,14 @@ def main():
     ft_train_time = time.time() - t0
     ft_predictor = FTPredictor(ft_model, device, batch_size = 1024)
     n_params = sum(p.numel() for p in ft_model.parameters())
-    print(f'FT final model trained in {ft_train_time:.1f} s')
+    print(f'final model trained in {ft_train_time:.1f} s')
     print(f'parameter count, {n_params:,}')
 
-    # save model weights as safetensors
+    # model weights saved as safetensors
     safetensors_save(ft_model.state_dict(), str(results_dir / 'ft_weights.safetensors'))
-    print(f'weights saved, ft_weights.safetensors')
+    print('weights saved, ft_weights.safetensors')
 
-    # save training log
+    # training log written as json
     ft_train_log = {
         'train_losses': ft_log['train_losses'],
         'val_rank_corr': ft_log['val_rank_corr'],
@@ -679,14 +748,15 @@ def main():
     # validation diagnostics
     ft_rc_val = rank_correlation_oos(ft_predictor, val_dates, all_months)
     ft_rc_test = rank_correlation_oos(ft_predictor, test_dates, all_months)
-    print(f'FT rank corr val, {ft_rc_val:.4f}')
-    print(f'FT rank corr test, {ft_rc_test:.4f}')
+    print(f'rank corr val, {ft_rc_val:.4f}')
+    print(f'rank corr test, {ft_rc_test:.4f}')
 
-    # validation predictions saved
-    val_predictions = predict_test(ft_predictor, val_dates, all_months)
-    val_predictions.to_parquet(results_dir / 'ft_val_predictions.parquet', index = False)
+    # validation and test predictions saved as csv
+    predict_test(ft_predictor, val_dates, all_months).to_csv(results_dir / 'ft_val_predictions.csv', index = False)
+    predict_test(ft_predictor, test_dates, all_months).to_csv(results_dir / 'ft_test_predictions.csv', index = False)
+    print('val and test predictions saved')
 
-    # test simulation
+    # test set portfolio simulation
     sim = run_quintile_simulation(ft_predictor, test_dates, all_months)
     ls, lo = sim['long_short'], sim['long_only']
 
@@ -702,38 +772,28 @@ def main():
         'long_only_scaled': portfolio_metrics(lo_scaled),
     }
 
-    # save returns, holdings, and predictions for the test set
-    ls['returns_df'].to_parquet(results_dir / 'ft_returns_long_short.parquet', index = False)
-    lo['returns_df'].to_parquet(results_dir / 'ft_returns_long_only.parquet', index = False)
-    ls['holdings_df'].to_parquet(results_dir / 'ft_holdings_long_short.parquet', index = False)
-    lo['holdings_df'].to_parquet(results_dir / 'ft_holdings_long_only.parquet', index = False)
-    predict_test(ft_predictor, test_dates, all_months).to_parquet(results_dir / 'ft_test_predictions.parquet', index = False)
+    ls['returns_df'].to_csv(results_dir / 'ft_returns_long_short.csv', index = False)
+    lo['returns_df'].to_csv(results_dir / 'ft_returns_long_only.csv', index = False)
+    ls['holdings_df'].to_csv(results_dir / 'ft_holdings_long_short.csv', index = False)
+    lo['holdings_df'].to_csv(results_dir / 'ft_holdings_long_only.csv', index = False)
 
     mls = ft_metrics['long_short_scaled']
     mlo = ft_metrics['long_only_scaled']
-    print(f'FT long-short vol, sharpe = {mls["sharpe"]:.4f}, ann_ret = {mls["ann_ret"] * 100:.2f}%, ann_vol = {mls["ann_vol"] * 100:.2f}%')
-    print(f'FT long-only vol, sharpe = {mlo["sharpe"]:.4f}, ann_ret = {mlo["ann_ret"] * 100:.2f}%, ann_vol = {mlo["ann_vol"] * 100:.2f}%')
+    print(f'long short vol, sharpe = {mls["sharpe"]:.4f}, ann_ret = {mls["ann_ret"] * 100:.2f}%, ann_vol = {mls["ann_vol"] * 100:.2f}%')
+    print(f'long only vol, sharpe = {mlo["sharpe"]:.4f}, ann_ret = {mlo["ann_ret"] * 100:.2f}%, ann_vol = {mlo["ann_vol"] * 100:.2f}%')
 
-    # consolidated summary
+    # consolidated summary written as json
     summary = {
         'run_timestamp_utc': run_timestamp,
-        'universe': 'EM',
         'n_features': len(feature_cols),
         'feature_cols': feature_cols,
         'architecture': {
-            'name': 'Feature Tokeniser Transformer',
             'reference': 'Gorishniy et al. (2021)',
             'n_heads': ft_best['n_heads'],
             'd_model': ft_log['d_model'],
             'd_ff': ft_log['d_ff'],
             'n_layers': ft_best['n_layers'],
             'dropout': ft_best['dropout'],
-            'activation': 'GELU',
-            'normalisation': 'Pre-LN',
-            'pooling': 'CLS token',
-            'task': 'regression (ret_exc_lead1m)',
-            'loss': 'MSE',
-            'imputation': 'median (zero in rank-normalised space)',
             'parameter_count': int(n_params),
         },
         'split': {
@@ -766,16 +826,10 @@ def main():
             'n_epochs_train': n_epochs_train,
             'patience': patience,
             'grad_clip_norm': grad_clip_norm,
-            'optuna_seed': optuna_seed,
             'torch_seed': torch_seed,
-            'n_trials': n_trials,
         },
         'ft_transformer': {
             'best_params': ft_best,
-            'best_val_long_short_sharpe': float(ft_study.best_value),
-            'best_trial_number': int(ft_study.best_trial.number),
-            'n_trials_completed': sum(1 for t in ft_study.trials if t.state.name == 'COMPLETE'),
-            'hpo_time_seconds': float(ft_hpo_time),
             'final_training_time_seconds': float(ft_train_time),
             'best_epoch': ft_log['best_epoch'],
             'n_epochs_run': ft_log['n_epochs_run'],
@@ -793,68 +847,17 @@ def main():
     for label, key in [('long_short', 'long_short_scaled'), ('long_only', 'long_only_scaled')]:
         m = ft_metrics[key]
         rows.append({
-            'portfolio': label,
-            'sharpe': round(m['sharpe'], 4),
-            'ann_ret': round(m['ann_ret'] * 100, 2),
-            'ann_vol': round(m['ann_vol'] * 100, 2),
-            'max_dd': round(m['max_dd'] * 100, 2),
-            'n_obs': m['n_obs'],
+            'portfolio': label, 'sharpe': round(m['sharpe'], 4),
+            'ann_ret': round(m['ann_ret'] * 100, 2), 'ann_vol': round(m['ann_vol'] * 100, 2),
+            'max_dd': round(m['max_dd'] * 100, 2), 'n_obs': m['n_obs'],
         })
     summary_table = pd.DataFrame(rows)
-    print('\nFT-Transformer Benchmark, EM Universe, test set, vol-targeted')
+    print('FT Transformer Benchmark, EM Universe, test set, vol targeted')
     print(summary_table.to_string(index = False))
 
-    # image 1, cumulative wealth for long-short and long-only portfolios.
-    # image 2, training diagnostics, namely loss and validation rank correlation.
-    plt.rcParams.update({
-        "mathtext.fontset": "cm",
-        "font.size": 10,
-        "axes.spines.top": False,
-        "axes.spines.right": False,
-        "savefig.dpi": 300,
-        "savefig.bbox": "tight",
-    })
-
-    # image 1, cumulative wealth
-    fig, axes = plt.subplots(1, 2, figsize = (12, 4.5))
-
-    axes[0].plot(np.cumprod(1.0 + ls_scaled), label = 'long-short vol', color = '#1F4E79')
-    axes[0].plot(np.cumprod(1.0 + ls['returns']), label = 'long-short raw', color = '#1F4E79', linestyle = '--', alpha = 0.5)
-    axes[0].set_xlabel('Months from Start of Test Window')
-    axes[0].set_ylabel('Cumulative Wealth')
-    axes[0].legend(frameon = False, loc = 'upper left')
-
-    axes[1].plot(np.cumprod(1.0 + lo_scaled), label = 'long-only vol', color = '#8B2D2D')
-    axes[1].plot(np.cumprod(1.0 + lo['returns']), label = 'long-only raw', color = '#8B2D2D', linestyle = '--', alpha = 0.5)
-    axes[1].set_xlabel('Months from Start of Test Window')
-    axes[1].set_ylabel('Cumulative Wealth')
-    axes[1].legend(frameon = False, loc = 'upper left')
-
-    fig.tight_layout()
-    fig.savefig(results_dir / 'ft_cumulative_wealth.pdf')
-    fig.savefig(results_dir / 'ft_cumulative_wealth.png')
-    plt.close(fig)
-    print('cumulative wealth plot saved, ft_cumulative_wealth.pdf and .png')
-
-    # image 2, training diagnostics
-    fig, axes = plt.subplots(1, 2, figsize = (12, 4.5))
-
-    axes[0].plot(ft_log['train_losses'], color = '#1F4E79')
-    axes[0].axvline(ft_log['best_epoch'], color = '#8B2D2D', linestyle = '--', alpha = 0.7, label = f'best epoch, {ft_log["best_epoch"]}')
-    axes[0].set_xlabel('Epoch')
-    axes[0].set_ylabel('Training MSE')
-    axes[0].legend(frameon = False, loc = 'upper right')
-
-    axes[1].plot(ft_log['val_rank_corr'], color = '#1E5F38')
-    axes[1].axvline(ft_log['best_epoch'], color = '#8B2D2D', linestyle = '--', alpha = 0.7, label = f'best epoch, {ft_log["best_epoch"]}')
-    axes[1].set_xlabel('Epoch')
-    axes[1].set_ylabel('Validation Rank Correlation')
-    axes[1].legend(frameon = False, loc = 'lower right')
-
-    fig.tight_layout()
-    fig.savefig(results_dir / 'ft_training_diagnostics.pdf')
-    fig.savefig(results_dir / 'ft_training_diagnostics.png')
-    plt.close(fig)
+    # diagnostic plots
+    plot_cumulative_wealth(ls['returns'], ls_scaled, lo['returns'], lo_scaled)
+    plot_training_diagnostics(ft_log['train_losses'], ft_log['val_rank_corr'], ft_log['best_epoch'])
 
 
 
