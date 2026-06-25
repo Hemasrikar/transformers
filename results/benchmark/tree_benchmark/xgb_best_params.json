@@ -1,0 +1,19 @@
+{
+  "best_params": {
+    "n_estimators": 393,
+    "max_depth": 5,
+    "learning_rate": 0.08481054350447192,
+    "subsample": 0.936954488824697,
+    "colsample_bytree": 0.5999765571598739,
+    "min_child_weight": 14,
+    "reg_alpha": 0.024713521040881543,
+    "reg_lambda": 1.3723145380488813
+  },
+  "best_value": 2.085553489361625,
+  "best_trial_number": 43,
+  "best_trial_user_attrs": {
+    "val_sharpe_long_only": 1.2785441359376948
+  },
+  "n_trials_completed": 50,
+  "hpo_time_seconds": 1463.311152458191
+}
