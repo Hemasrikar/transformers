@@ -24,7 +24,7 @@ target_cols = ["target_3m", "target_6m", "target_12m"]
 @dataclass
 class Config:
     # Processed data and output paths
-    results_dir: Path = Path("results")
+    results_dir: Path = Path("results/transformer")
     val_path: Path = Path("data/processed/val.parquet")
     test_path: Path = Path("data/processed/test.parquet")
     col_metadata_path: Path = Path("data/processed/column_metadata.json")
@@ -47,11 +47,24 @@ class Config:
 
     # Portfolio risk management
     target_vol: float = 0.10
-    vol_lookback: int = 6
+    # vol_lookback_months is the trailing window used to estimate realised
+    # volatility for the leverage overlay, expressed in calendar months.
+    # using months rather than rebalance periods keeps the window stable
+    # across different rebalance frequencies: 36 months gives 6 semi-annual
+    # observations (freq=6) or 12 quarterly observations (freq=3). increase
+    # to 48 or 60 for a more stable but slower-reacting vol estimate.
+    vol_lookback_months: int = 36
     max_leverage_long_only: float = 3.0
     max_leverage_long_short: float = 3.0
     min_firms_country: int = 20
     max_position_weight: float = 0.05
+    # Portfolio construction
+    # rebalance_freq controls the primary (6m horizon) rebalance cadence.
+    # the 3m and 12m horizons use 3 and 12 respectively, derived from the
+    # horizon label in the evaluation loop, so this field drives the
+    # validation-set simulation used for variant selection only.
+    rebalance_freq: int = 3
+    tc_bps: int = 25
 
     encoding_variant: str = "linear"
     seed: int = 24
@@ -469,6 +482,26 @@ class DualPathTransformer(nn.Module):
 
 # Portfolio simulation
 
+def _renorm_over_valid(weights, valid):
+    """Renormalise a weight vector so the valid positions sum to one
+    (or to the input total). Firms with invalid forward returns are
+    dropped and their weight is redistributed proportionally to the
+    remaining positions. Without this, the portfolio silently holds
+    cash on delisted or NaN-return positions, which drags the realised
+    return down systematically."""
+    if isinstance(weights, np.ndarray):
+        valid_np = np.asarray(valid, dtype=bool)
+        valid_total = float(weights[valid_np].sum())
+        if valid_total <= 1e-12:
+            return weights
+        return weights / valid_total
+    valid_t = torch.as_tensor(valid, dtype=torch.bool)
+    valid_total = float(weights[valid_t].sum())
+    if valid_total <= 1e-12:
+        return weights
+    return weights / valid_total
+
+
 def _capped_softmax_weights(scores, max_weight):
     n = scores.shape[0]
     if n == 0:
@@ -519,6 +552,7 @@ def _seed_vol_history(models, val_dataset, config, rebalance_freq, leg_kind):
         models = [models]
     for m in models:
         m.eval()
+    n_vol_periods = max(1, config.vol_lookback_months // rebalance_freq)
     returns = []
     with torch.no_grad():
         for idx in range(0, len(val_dataset), rebalance_freq):
@@ -530,26 +564,30 @@ def _seed_vol_history(models, val_dataset, config, rebalance_freq, leg_kind):
             cids = batch["country_ids"].to(device)
             scores = _ensemble_score(models, k0, k1, k0_miss, k1_miss, cids)
             n_firms = scores.shape[0]
-            n_q = max(int(0.2 * n_firms), 1)
             raw = batch["targets"]["target_6m"]
             valid = batch["valid_masks"]["target_6m"]
-            _, long_idx = scores.topk(n_q)
-            long_idx_np = long_idx.cpu().numpy()
-            long_returns = [raw[fi].item() for fi in long_idx_np if valid[fi]]
-            long_ret = (
-                sum(long_returns) / max(len(long_returns), 1) if long_returns else 0.0
-            )
+            raw_np = raw.numpy()
+            valid_np = valid.numpy()
             if leg_kind == "long_only":
+                # softmax-weighted return across all firms, renormalised
+                # over the firms with valid forward returns
+                w = F.softmax(scores.cpu(), dim=0).numpy()
+                w = _renorm_over_valid(w, valid_np)
+                long_ret = float(sum(
+                    w[fi] * raw_np[fi] for fi in range(n_firms) if valid_np[fi]
+                ))
                 returns.append(long_ret)
             else:
-                _, short_idx = scores.topk(n_q, largest=False)
-                short_idx_np = short_idx.cpu().numpy()
-                short_returns = [raw[fi].item() for fi in short_idx_np if valid[fi]]
-                short_ret = (
-                    sum(short_returns) / max(len(short_returns), 1) if short_returns else 0.0
-                )
+                # mean-split: above-mean = long, below-mean = short
+                mean_s = scores.mean().item()
+                long_r = [raw_np[fi] for fi in range(n_firms)
+                          if scores[fi].item() > mean_s and valid_np[fi]]
+                short_r = [raw_np[fi] for fi in range(n_firms)
+                           if scores[fi].item() <= mean_s and valid_np[fi]]
+                long_ret = sum(long_r) / max(len(long_r), 1) if long_r else 0.0
+                short_ret = sum(short_r) / max(len(short_r), 1) if short_r else 0.0
                 returns.append(long_ret - short_ret)
-    return returns[-config.vol_lookback:] if returns else []
+    return returns[-n_vol_periods:] if returns else []
 
 
 @torch.no_grad()
@@ -563,6 +601,7 @@ def portfolio_simulation(models, dataset, config, rebalance_freq=6, tc_bps=25,
 
     periods_per_year = 12 / rebalance_freq
     portfolio_returns = []
+    unscaled_returns = []
     raw_returns_hist = list(seed_returns) if seed_returns else []
     prev_firm_ids = None
     holdings = []
@@ -580,25 +619,31 @@ def portfolio_simulation(models, dataset, config, rebalance_freq=6, tc_bps=25,
 
         scores = _ensemble_score(models, k0, k1, k0_miss, k1_miss, cids, key=score_key)
         n_firms = scores.shape[0]
-        n_quintile = max(int(0.2 * n_firms), 1)
-        _, top_idx = scores.topk(n_quintile)
-        top_idx_np = top_idx.cpu().numpy()
-        top_firm_ids = firm_ids[top_idx_np]
 
-        weights = _cap_uniform_weights(n_quintile, config.max_position_weight)
-        weights = weights / weights.sum() if weights.sum() > 0 else weights
+        # all stocks — softmax-weighted by predicted score, no quantile cutoff
+        top_idx_np = np.arange(n_firms)
+        top_firm_ids = firm_ids
+
+        weights = _capped_softmax_weights(scores, config.max_position_weight)
 
         raw_returns = batch["targets"][target_key]
         valid = batch["valid_masks"][target_key]
+        # renormalise weights over firms with valid forward returns. firms
+        # that delisted or have NaN targets are dropped from the portfolio
+        # and their weight is redistributed proportionally to the remaining
+        # firms, so the portfolio stays fully invested rather than silently
+        # holding cash on missing positions.
+        weights = _renorm_over_valid(weights, valid)
         leg_return = 0.0
-        for i, fi in enumerate(top_idx_np):
+        for fi in range(n_firms):
             if valid[fi]:
-                leg_return += weights[i].item() * raw_returns[fi].item()
+                leg_return += weights[fi].item() * raw_returns[fi].item()
 
         base_turnover = _firm_id_turnover(prev_firm_ids, top_firm_ids)
 
-        if len(raw_returns_hist) >= config.vol_lookback:
-            recent = np.array(raw_returns_hist[-config.vol_lookback:])
+        n_vol_periods = max(1, config.vol_lookback_months // rebalance_freq)
+        if len(raw_returns_hist) >= n_vol_periods:
+            recent = np.array(raw_returns_hist[-n_vol_periods:])
             realised_vol = recent.std() * np.sqrt(periods_per_year)
             leverage = config.target_vol / max(realised_vol, 1e-6)
             leverage = float(np.clip(
@@ -609,8 +654,10 @@ def portfolio_simulation(models, dataset, config, rebalance_freq=6, tc_bps=25,
         else:
             leverage = 1.0
 
-        tc = leverage * base_turnover * tc_bps / 10000.0
+        flat_tc = base_turnover * tc_bps / 10000.0
+        tc = leverage * flat_tc
         portfolio_returns.append(leverage * leg_return - tc)
+        unscaled_returns.append(leg_return - flat_tc)
         raw_returns_hist.append(leg_return)
         prev_firm_ids = top_firm_ids
 
@@ -622,19 +669,20 @@ def portfolio_simulation(models, dataset, config, rebalance_freq=6, tc_bps=25,
                 "portfolio": "long_only",
                 "leverage": float(leverage),
             })
-            for i, fi in enumerate(top_idx_np):
+            for fi in range(n_firms):
                 holdings.append({
                     "rebalance_index": rebal_idx, "eom": eom_ts,
                     "portfolio": "long_only", "leg": "long",
                     "country_id": int(cids[fi].item()), "id": int(firm_ids[fi].item()),
-                    "weight": float(weights[i].item()),
+                    "weight": float(weights[fi].item()),
                     "realised_return": (float(raw_returns[fi].item()) if valid[fi] else float("nan")),
                 })
 
     returns_arr = np.array(portfolio_returns)
+    unscaled_arr = np.array(unscaled_returns)
     if record_holdings:
-        return returns_arr, holdings, leverage_trace
-    return returns_arr
+        return returns_arr, unscaled_arr, holdings, leverage_trace
+    return returns_arr, unscaled_arr
 
 
 @torch.no_grad()
@@ -648,6 +696,7 @@ def portfolio_simulation_long_short(models, dataset, config, rebalance_freq=6, t
 
     periods_per_year = 12 / rebalance_freq
     portfolio_returns = []
+    unscaled_returns = []
     raw_ls_returns = list(seed_returns) if seed_returns else []
     prev_long_ids = None
     prev_short_ids = None
@@ -666,19 +715,34 @@ def portfolio_simulation_long_short(models, dataset, config, rebalance_freq=6, t
 
         scores = _ensemble_score(models, k0, k1, k0_miss, k1_miss, cids, key=score_key)
         n_firms = scores.shape[0]
-        n_quintile = max(int(0.2 * n_firms), 1)
-        _, long_idx = scores.topk(n_quintile)
-        _, short_idx = scores.topk(n_quintile, largest=False)
+
+        # all stocks, split by cross-sectional mean: no quantile cutoff.
+        # weights within each leg are proportional to the demeaned score so
+        # firms with stronger conviction receive larger allocations.
+        mean_score = scores.mean()
+        long_idx = (scores > mean_score).nonzero(as_tuple=True)[0]
+        short_idx = (scores <= mean_score).nonzero(as_tuple=True)[0]
         long_idx_np = long_idx.cpu().numpy()
         short_idx_np = short_idx.cpu().numpy()
         long_firm_ids = firm_ids[long_idx_np]
         short_firm_ids = firm_ids[short_idx_np]
 
-        long_w = _capped_softmax_weights(scores[long_idx], config.max_position_weight)
-        short_w = _capped_softmax_weights(-scores[short_idx], config.max_position_weight)
+        long_w = _capped_softmax_weights(
+            scores[long_idx] - mean_score, config.max_position_weight
+        )
+        short_w = _capped_softmax_weights(
+            mean_score - scores[short_idx], config.max_position_weight
+        )
 
         raw_returns = batch["targets"][target_key]
         valid = batch["valid_masks"][target_key]
+        # renormalise long and short leg weights over firms with valid
+        # forward returns. without this, delisted or missing-return firms
+        # silently leave the portfolio holding cash on those positions.
+        long_valid = valid[long_idx_np]
+        short_valid = valid[short_idx_np]
+        long_w = _renorm_over_valid(long_w, long_valid)
+        short_w = _renorm_over_valid(short_w, short_valid)
         long_ret = 0.0
         for i, fi in enumerate(long_idx_np):
             if valid[fi]:
@@ -693,8 +757,9 @@ def portfolio_simulation_long_short(models, dataset, config, rebalance_freq=6, t
         st = _firm_id_turnover(prev_short_ids, short_firm_ids)
         base_turnover = lt + st
 
-        if len(raw_ls_returns) >= config.vol_lookback:
-            recent = np.array(raw_ls_returns[-config.vol_lookback:])
+        n_vol_periods = max(1, config.vol_lookback_months // rebalance_freq)
+        if len(raw_ls_returns) >= n_vol_periods:
+            recent = np.array(raw_ls_returns[-n_vol_periods:])
             realised_vol = recent.std() * np.sqrt(periods_per_year)
             leverage = config.target_vol / max(realised_vol, 1e-6)
             leverage = float(np.clip(
@@ -704,8 +769,10 @@ def portfolio_simulation_long_short(models, dataset, config, rebalance_freq=6, t
         else:
             leverage = 1.0
 
-        tc = leverage * base_turnover * tc_bps / 10000.0
+        flat_tc = base_turnover * tc_bps / 10000.0
+        tc = leverage * flat_tc
         portfolio_returns.append(leverage * ls_ret - tc)
+        unscaled_returns.append(ls_ret - flat_tc)
         raw_ls_returns.append(ls_ret)
         prev_long_ids = long_firm_ids
         prev_short_ids = short_firm_ids
@@ -746,9 +813,10 @@ def portfolio_simulation_long_short(models, dataset, config, rebalance_freq=6, t
                 })
 
     returns_arr = np.array(portfolio_returns)
+    unscaled_arr = np.array(unscaled_returns)
     if record_holdings:
-        return returns_arr, holdings, leverage_trace
-    return returns_arr
+        return returns_arr, unscaled_arr, holdings, leverage_trace
+    return returns_arr, unscaled_arr
 
 
 @torch.no_grad()
@@ -761,6 +829,7 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
 
     periods_per_year = 12 / rebalance_freq
     portfolio_returns = []
+    unscaled_returns = []
     raw_composite_returns = list(seed_returns) if seed_returns else []
     prev_long_ids = {}
     prev_short_ids = {}
@@ -809,11 +878,12 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
 
             idxs_t = torch.as_tensor(idxs, device=device, dtype=torch.long)
             scores_c = scores[idxs_t]
-            n_quintile_c = max(int(0.2 * n_firms_c), 1)
 
             if long_short:
-                _, long_local = scores_c.topk(n_quintile_c)
-                _, short_local = scores_c.topk(n_quintile_c, largest=False)
+                # mean-split within country: all firms, no quantile cutoff
+                mean_c = scores_c.mean()
+                long_local = (scores_c > mean_c).nonzero(as_tuple=True)[0]
+                short_local = (scores_c <= mean_c).nonzero(as_tuple=True)[0]
                 long_pos = idxs[long_local.cpu().numpy()]
                 short_pos = idxs[short_local.cpu().numpy()]
                 long_firm_ids_c = firm_ids[long_pos]
@@ -823,8 +893,21 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
                 st = _firm_id_turnover(prev_short_ids.get(cid), short_firm_ids_c)
                 turnover_c = lt + st
 
-                long_w = _capped_softmax_weights(scores[long_pos], config.max_position_weight)
-                short_w = _capped_softmax_weights(-scores[short_pos], config.max_position_weight)
+                # equal weighting within each country leg, matching the
+                # fama-french factor portfolio convention.
+                n_long_c = len(long_pos)
+                n_short_c = len(short_pos)
+                long_w = torch.full(
+                    (n_long_c,), 1.0 / max(n_long_c, 1), dtype=torch.float32,
+                )
+                short_w = torch.full(
+                    (n_short_c,), 1.0 / max(n_short_c, 1), dtype=torch.float32,
+                )
+                # renormalise over valid firms within this country leg
+                long_valid_c = valid[long_pos]
+                short_valid_c = valid[short_pos]
+                long_w = _renorm_over_valid(long_w, long_valid_c)
+                short_w = _renorm_over_valid(short_w, short_valid_c)
                 long_ret = 0.0
                 for i, fi in enumerate(long_pos):
                     if valid[fi]:
@@ -859,14 +942,19 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
                             ),
                         })
             else:
-                _, top_local = scores_c.topk(n_quintile_c)
-                top_pos = idxs[top_local.cpu().numpy()]
+                # all firms in country, softmax-weighted — no quantile cutoff
+                top_pos = idxs
                 top_firm_ids_c = firm_ids[top_pos]
 
                 turnover_c = _firm_id_turnover(prev_top_ids.get(cid), top_firm_ids_c)
 
-                top_w = _cap_uniform_weights(n_quintile_c, config.max_position_weight)
-                top_w = top_w / top_w.sum() if top_w.sum() > 0 else top_w
+                # equal weighting within country for the long-only leg too
+                n_top_c = len(top_pos)
+                top_w = torch.full(
+                    (n_top_c,), 1.0 / max(n_top_c, 1), dtype=torch.float32,
+                )
+                top_valid_c = valid[top_pos]
+                top_w = _renorm_over_valid(top_w, top_valid_c)
                 top_ret = 0.0
                 for i, fi in enumerate(top_pos):
                     if valid[fi]:
@@ -880,7 +968,7 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
                             "rebalance_index": rebal_idx, "eom": eom_ts,
                             "portfolio": portfolio_label, "leg": "long",
                             "country_id": int(cid), "id": int(firm_ids[fi].item()),
-                            "weight": float(top_w[i].item()),
+                            "weight": float(top_w[i].item()),  # softmax weight
                             "realised_return": (
                                 float(raw_returns[fi].item()) if valid[fi] else float("nan")
                             ),
@@ -892,6 +980,7 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
 
         if not country_returns:
             portfolio_returns.append(0.0)
+            unscaled_returns.append(0.0)
             raw_composite_returns.append(0.0)
             continue
 
@@ -911,8 +1000,9 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
                 entry["returns"].append(float(ret))
                 entry["weights"].append(float(w))
 
-        if len(raw_composite_returns) >= config.vol_lookback:
-            recent = np.array(raw_composite_returns[-config.vol_lookback:])
+        n_vol_periods = max(1, config.vol_lookback_months // rebalance_freq)
+        if len(raw_composite_returns) >= n_vol_periods:
+            recent = np.array(raw_composite_returns[-n_vol_periods:])
             realised_vol = recent.std() * np.sqrt(periods_per_year)
             leverage = config.target_vol / max(realised_vol, 1e-6)
             leverage = float(np.clip(
@@ -922,6 +1012,7 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
             leverage = 1.0
 
         portfolio_returns.append(leverage * composite_ret - leverage * composite_cost)
+        unscaled_returns.append(composite_ret - composite_cost)
         raw_composite_returns.append(composite_ret)
 
         if record_holdings:
@@ -933,14 +1024,13 @@ def portfolio_simulation_country_composite(models, dataset, config, rebalance_fr
             })
 
     returns_arr = np.array(portfolio_returns)
-    out = [returns_arr]
+    unscaled_arr = np.array(unscaled_returns)
+    out = [returns_arr, unscaled_arr]
     if record_holdings:
         out.append(holdings)
         out.append(leverage_trace)
     if record_per_country:
         out.append(per_country)
-    if len(out) == 1:
-        return out[0]
     return tuple(out)
 
 
@@ -955,11 +1045,15 @@ def compute_portfolio_metrics(returns, periods_per_year=2):
             "max_drawdown": 0.0, "n_rebalances": 0,
         }
     cum_return = (1 + returns).prod() - 1
+    # annualised_return is the CAGR, reported for wealth accumulation context.
     annualised_return = (
         (1 + cum_return) ** (periods_per_year / max(len(returns), 1)) - 1
     )
     annualised_vol = returns.std() * np.sqrt(periods_per_year)
-    sharpe = annualised_return / max(annualised_vol, 1e-8)
+    # sharpe uses the arithmetic mean, not the CAGR. the geometric mean is
+    # always below the arithmetic mean by approximately variance/2 (Jensen),
+    # so using CAGR would systematically overstate the Sharpe ratio.
+    sharpe = (returns.mean() * periods_per_year) / max(annualised_vol, 1e-8)
     cum_wealth = np.cumprod(1 + returns)
     peak = np.maximum.accumulate(cum_wealth)
     drawdown = (peak - cum_wealth) / peak
@@ -978,8 +1072,7 @@ def rolling_sharpe(returns, window_periods, periods_per_year=2):
     series = []
     for start in range(0, len(returns) - window_periods + 1):
         window = returns[start:start + window_periods]
-        window_cum = (1 + window).prod() - 1
-        ann_ret = (1 + window_cum) ** (periods_per_year / window_periods) - 1
+        ann_ret = window.mean() * periods_per_year
         ann_vol = window.std() * np.sqrt(periods_per_year)
         series.append(float(ann_ret / max(ann_vol, 1e-8)))
     if not series:
@@ -999,8 +1092,7 @@ def compute_portfolio_metrics_extended(returns, periods_per_year=2):
     base["rolling_sharpe_3y"] = rolling_sharpe(returns_arr, window_3y, periods_per_year)
     if len(returns_arr) >= window_5y:
         head = returns_arr[:window_5y]
-        head_cum = (1 + head).prod() - 1
-        ann_ret = (1 + head_cum) ** (periods_per_year / window_5y) - 1
+        ann_ret = head.mean() * periods_per_year
         ann_vol = head.std() * np.sqrt(periods_per_year)
         base["sharpe_5y"] = float(ann_ret / max(ann_vol, 1e-8))
     else:
@@ -1087,9 +1179,9 @@ val_ds = load_dataset(
 )
 
 horizons = [
-    ("scores_3m", "target_3m", "3m"),
-    ("scores_6m", "target_6m", "6m"),
-    ("scores_12m", "target_12m", "12m"),
+    ("scores_3m", "target_3m", "3m", 3),
+    ("scores_6m", "target_6m", "6m", 6),
+    ("scores_12m", "target_12m", "12m", 12),
 ]
 
 variant_test_summary = {}
@@ -1117,11 +1209,21 @@ for variant_name in all_results:
     variant_model.load_state_dict(safetensors_load(str(weights_path)))
     variant_models[variant_name] = variant_model
 
-    val_lo_seed = _seed_vol_history(variant_model, val_ds, cfg, 6, "long_only")
-    val_ls_seed = _seed_vol_history(variant_model, val_ds, cfg, 6, "long_short")
+    val_lo_seed = _seed_vol_history(
+        variant_model, val_ds, cfg, cfg.rebalance_freq, "long_only"
+    )
+    val_ls_seed = _seed_vol_history(
+        variant_model, val_ds, cfg, cfg.rebalance_freq, "long_short"
+    )
 
-    val_ls_returns = portfolio_simulation_long_short(variant_model, val_ds, cfg)
-    val_ls_metrics = compute_portfolio_metrics_extended(val_ls_returns)
+    val_periods_per_year = 12 / cfg.rebalance_freq
+    val_ls_scaled, val_ls_unscaled = portfolio_simulation_long_short(
+        variant_model, val_ds, cfg,
+        rebalance_freq=cfg.rebalance_freq, tc_bps=cfg.tc_bps,
+    )
+    val_ls_metrics = compute_portfolio_metrics_extended(
+        val_ls_scaled, val_periods_per_year
+    )
     variant_val_summary[variant_name] = {
         "rank_corr_6m": all_results[variant_name]
             .get("val_metrics", {})
@@ -1135,72 +1237,104 @@ for variant_name in all_results:
     holdings_records = []
     leverage_records = []
 
-    for score_key, target_key, horizon_label in horizons:
-        lo_returns = portfolio_simulation(
-            variant_model, test_ds, cfg, seed_returns=val_lo_seed,
+    for score_key, target_key, horizon_label, rebal_freq in horizons:
+        periods_per_year = 12 / rebal_freq
+
+        # seeds are computed on the validation set using the same rebalance
+        # cadence as the test simulation for this horizon, so the volatility
+        # history passed to the overlay is consistent in step size.
+        lo_seed = _seed_vol_history(
+            variant_model, val_ds, cfg, rebal_freq, "long_only"
+        )
+        ls_seed = _seed_vol_history(
+            variant_model, val_ds, cfg, rebal_freq, "long_short"
+        )
+
+        lo_result = portfolio_simulation(
+            variant_model, test_ds, cfg,
+            rebalance_freq=rebal_freq, tc_bps=cfg.tc_bps,
+            seed_returns=lo_seed,
             record_holdings=(horizon_label == "6m"),
             score_key=score_key, target_key=target_key,
         )
-        if isinstance(lo_returns, tuple):
-            lo_returns, lo_holdings, lo_leverage = lo_returns
+        lo_returns, lo_unscaled = lo_result[0], lo_result[1]
+        if len(lo_result) == 4:
+            lo_holdings, lo_leverage = lo_result[2], lo_result[3]
         else:
             lo_holdings, lo_leverage = [], []
 
-        ls_returns = portfolio_simulation_long_short(
-            variant_model, test_ds, cfg, seed_returns=val_ls_seed,
+        ls_result = portfolio_simulation_long_short(
+            variant_model, test_ds, cfg,
+            rebalance_freq=rebal_freq, tc_bps=cfg.tc_bps,
+            seed_returns=ls_seed,
             record_holdings=(horizon_label == "6m"),
             score_key=score_key, target_key=target_key,
         )
-        if isinstance(ls_returns, tuple):
-            ls_returns, ls_holdings, ls_leverage = ls_returns
+        ls_returns, ls_unscaled = ls_result[0], ls_result[1]
+        if len(ls_result) == 4:
+            ls_holdings, ls_leverage = ls_result[2], ls_result[3]
         else:
             ls_holdings, ls_leverage = [], []
 
         cc_lo_out = portfolio_simulation_country_composite(
-            variant_model, test_ds, cfg, long_short=False,
-            seed_returns=val_lo_seed,
+            variant_model, test_ds, cfg,
+            rebalance_freq=rebal_freq, tc_bps=cfg.tc_bps,
+            long_short=False,
+            seed_returns=lo_seed,
             record_holdings=(horizon_label == "6m"),
             record_per_country=(horizon_label == "6m"),
             score_key=score_key, target_key=target_key,
         )
-        if isinstance(cc_lo_out, tuple):
-            cc_lo_returns = cc_lo_out[0]
-            if horizon_label == "6m":
-                cc_lo_holdings = cc_lo_out[1]
-                cc_lo_leverage = cc_lo_out[2]
-                cc_lo_per_country = cc_lo_out[3]
-            else:
-                cc_lo_holdings, cc_lo_leverage, cc_lo_per_country = [], [], {}
+        cc_lo_returns, cc_lo_unscaled = cc_lo_out[0], cc_lo_out[1]
+        if horizon_label == "6m":
+            cc_lo_holdings = cc_lo_out[2]
+            cc_lo_leverage = cc_lo_out[3]
+            cc_lo_per_country = cc_lo_out[4]
         else:
-            cc_lo_returns = cc_lo_out
             cc_lo_holdings, cc_lo_leverage, cc_lo_per_country = [], [], {}
 
         cc_ls_out = portfolio_simulation_country_composite(
-            variant_model, test_ds, cfg, long_short=True,
-            seed_returns=val_ls_seed,
+            variant_model, test_ds, cfg,
+            rebalance_freq=rebal_freq, tc_bps=cfg.tc_bps,
+            long_short=True,
+            seed_returns=ls_seed,
             record_holdings=(horizon_label == "6m"),
             record_per_country=(horizon_label == "6m"),
             score_key=score_key, target_key=target_key,
         )
-        if isinstance(cc_ls_out, tuple):
-            cc_ls_returns = cc_ls_out[0]
-            if horizon_label == "6m":
-                cc_ls_holdings = cc_ls_out[1]
-                cc_ls_leverage = cc_ls_out[2]
-                cc_ls_per_country = cc_ls_out[3]
-            else:
-                cc_ls_holdings, cc_ls_leverage, cc_ls_per_country = [], [], {}
+        cc_ls_returns, cc_ls_unscaled = cc_ls_out[0], cc_ls_out[1]
+        if horizon_label == "6m":
+            cc_ls_holdings = cc_ls_out[2]
+            cc_ls_leverage = cc_ls_out[3]
+            cc_ls_per_country = cc_ls_out[4]
         else:
-            cc_ls_returns = cc_ls_out
             cc_ls_holdings, cc_ls_leverage, cc_ls_per_country = [], [], {}
 
         block = {
-            "long_only": compute_portfolio_metrics_extended(lo_returns),
-            "long_short": compute_portfolio_metrics_extended(ls_returns),
-            "country_composite_long_only":
-                compute_portfolio_metrics_extended(cc_lo_returns),
-            "country_composite_long_short":
-                compute_portfolio_metrics_extended(cc_ls_returns),
+            "long_only": compute_portfolio_metrics_extended(
+                lo_returns, periods_per_year
+            ),
+            "long_only_unscaled": compute_portfolio_metrics_extended(
+                lo_unscaled, periods_per_year
+            ),
+            "long_short": compute_portfolio_metrics_extended(
+                ls_returns, periods_per_year
+            ),
+            "long_short_unscaled": compute_portfolio_metrics_extended(
+                ls_unscaled, periods_per_year
+            ),
+            "country_composite_long_only": compute_portfolio_metrics_extended(
+                cc_lo_returns, periods_per_year
+            ),
+            "country_composite_long_only_unscaled": compute_portfolio_metrics_extended(
+                cc_lo_unscaled, periods_per_year
+            ),
+            "country_composite_long_short": compute_portfolio_metrics_extended(
+                cc_ls_returns, periods_per_year
+            ),
+            "country_composite_long_short_unscaled": compute_portfolio_metrics_extended(
+                cc_ls_unscaled, periods_per_year
+            ),
         }
         portfolio_block[horizon_label] = block
 
@@ -1208,13 +1342,13 @@ for variant_name in all_results:
             per_country_blocks["country_composite_long_only"] = (
                 _build_per_country_block(
                     cc_lo_per_country, country_codes,
-                    col_meta["country_to_id"],
+                    col_meta["country_to_id"], periods_per_year,
                 )
             )
             per_country_blocks["country_composite_long_short"] = (
                 _build_per_country_block(
                     cc_ls_per_country, country_codes,
-                    col_meta["country_to_id"],
+                    col_meta["country_to_id"], periods_per_year,
                 )
             )
             holdings_records.extend(lo_holdings)
@@ -1230,8 +1364,11 @@ for variant_name in all_results:
         "corr_6m": all_results[variant_name]["test_metrics"]
             .get("rank_corr", {}).get("target_6m", float("nan")),
         "sharpe_lo": portfolio_block["6m"]["long_only"]["sharpe_ratio"],
+        "sharpe_lo_unscaled": portfolio_block["6m"]["long_only_unscaled"]["sharpe_ratio"],
         "sharpe_ls": portfolio_block["6m"]["long_short"]["sharpe_ratio"],
+        "sharpe_ls_unscaled": portfolio_block["6m"]["long_short_unscaled"]["sharpe_ratio"],
         "vol_ls": portfolio_block["6m"]["long_short"]["annualised_vol"],
+        "vol_ls_unscaled": portfolio_block["6m"]["long_short_unscaled"]["annualised_vol"],
     }
 
     variant_metrics_path = cfg.results_dir / f"metrics_{variant_name}.json"
@@ -1275,11 +1412,17 @@ best_sharpe_variant = max(
 print()
 print("Variant comparison (test set columns are reported; validation set")
 print("columns are the selection criteria):")
-print(
-    f"{'variant':<12} {'val_corr_6m':>11}  {'val_sharpe_ls':>13}  "
-    f"{'test_corr_6m':>12}  {'test_sharpe_lo':>14}  {'test_sharpe_ls':>14}  "
-    f"{'test_vol_ls':>11}"
+print("Scaled = volatility-targeted with leverage overlay.")
+print("Unscaled = flat position sizing, no leverage.")
+print()
+hdr = (
+    f"{'variant':<14} {'val_corr':>8}  {'val_sr_ls':>9}  "
+    f"{'corr_6m':>8}  "
+    f"{'sr_lo':>7}  {'sr_lo_u':>7}  "
+    f"{'sr_ls':>7}  {'sr_ls_u':>7}  "
+    f"{'vol_ls':>7}  {'vol_ls_u':>8}"
 )
+print(hdr)
 for variant_name in all_results:
     vs = variant_val_summary[variant_name]
     ts = variant_test_summary[variant_name]
@@ -1289,10 +1432,12 @@ for variant_name in all_results:
     if variant_name == best_sharpe_variant:
         marker += "  *sharpe"
     print(
-        f"{variant_name:<12} "
-        f"{vs['rank_corr_6m']:>11.4f}  {vs['sharpe_ls']:>13.4f}  "
-        f"{ts['corr_6m']:>12.4f}  {ts['sharpe_lo']:>14.4f}  "
-        f"{ts['sharpe_ls']:>14.4f}  {ts['vol_ls']:>11.4f}{marker}"
+        f"{variant_name:<14} "
+        f"{vs['rank_corr_6m']:>8.4f}  {vs['sharpe_ls']:>9.4f}  "
+        f"{ts['corr_6m']:>8.4f}  "
+        f"{ts['sharpe_lo']:>7.4f}  {ts['sharpe_lo_unscaled']:>7.4f}  "
+        f"{ts['sharpe_ls']:>7.4f}  {ts['sharpe_ls_unscaled']:>7.4f}  "
+        f"{ts['vol_ls']:>7.4f}  {ts['vol_ls_unscaled']:>8.4f}{marker}"
     )
 print(f"Best by validation rank correlation, {best_variant}")
 print(f"Best by validation long short Sharpe ratio, {best_sharpe_variant}")
@@ -1305,22 +1450,39 @@ with open(best_metrics_path, "r") as f:
 six_month_metrics = best_saved_metrics["portfolio_metrics"]
 
 print(f"Detailed test set portfolio metrics for {best_variant} (best by validation rank correlation):")
+print("(scaled) = with volatility overlay leverage.  (unscaled) = no leverage, flat tc.")
 print()
-for label in ["long_only", "long_short",
-              "country_composite_long_only", "country_composite_long_short"]:
+_report_labels = [
+    ("long_only", "long_only_unscaled"),
+    ("long_short", "long_short_unscaled"),
+    ("country_composite_long_only", "country_composite_long_only_unscaled"),
+    ("country_composite_long_short", "country_composite_long_short_unscaled"),
+]
+for label, label_u in _report_labels:
     print(f"{label}:")
     m = six_month_metrics[label]
+    mu = six_month_metrics[label_u]
     for k in ("cumulative_return", "annualised_return", "annualised_vol",
               "sharpe_ratio", "max_drawdown", "n_rebalances", "sharpe_5y"):
         v = m.get(k)
-        if v is None:
-            print(f"  {k}, n/a")
-        elif isinstance(v, (int, float)):
-            print(f"  {k}, {v:.4f}")
+        vu = mu.get(k)
+        if v is None and vu is None:
+            print(f"  {k:<30} n/a")
+        elif isinstance(v, (int, float)) and isinstance(vu, (int, float)):
+            print(f"  {k:<30} scaled {v:>9.4f}   unscaled {vu:>9.4f}")
     rs = m.get("rolling_sharpe_3y", {})
+    rs_u = mu.get("rolling_sharpe_3y", {})
     if rs and rs.get("mean") is not None:
-        print(f"rolling_sharpe_3y_mean, {rs['mean']:.4f}")
-        print(f"rolling_sharpe_3y_std, {rs['std']:.4f}")
+        mean_u = rs_u.get("mean") if rs_u else None
+        std_u = rs_u.get("std") if rs_u else None
+        print(
+            f"  {'rolling_sharpe_3y_mean':<30} scaled {rs['mean']:>9.4f}"
+            + (f"   unscaled {mean_u:>9.4f}" if mean_u is not None else "")
+        )
+        print(
+            f"  {'rolling_sharpe_3y_std':<30} scaled {rs['std']:>9.4f}"
+            + (f"   unscaled {std_u:>9.4f}" if std_u is not None else "")
+        )
     print()
 
 

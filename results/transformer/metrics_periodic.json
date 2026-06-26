@@ -1,0 +1,4074 @@
+{
+  "variant": "periodic",
+  "n_params": 183112,
+  "best_val_corr": 0.06271238116217621,
+  "best_epoch": 8,
+  "stopped_epoch": 23,
+  "training_time_seconds": 2113.8752570152283,
+  "history": {
+    "train_loss": [
+      0.17959498967384063,
+      0.17256438452750444,
+      0.17227194787904856,
+      0.1727715115994215,
+      0.17299488163183604,
+      0.17604061440816002,
+      0.17255101663370928,
+      0.17173575203392713,
+      0.16994902235825385,
+      0.1696506037657696,
+      0.16940629434964014,
+      0.1687119673967125,
+      0.16875320636031646,
+      0.16969359839068993,
+      0.16842977195564243,
+      0.1681953655733239,
+      0.16860849178203988,
+      0.16770764104726296,
+      0.16647578446224096,
+      0.16533313341261374,
+      0.16536758412858324,
+      0.16521750980367264,
+      0.16468837432977226
+    ],
+    "train_main": [
+      0.1396899399835439,
+      0.13306268725899004,
+      0.13287748406744665,
+      0.13339869055660472,
+      0.1337844224883214,
+      0.13673184114316153,
+      0.13336334896406957,
+      0.1326974317697542,
+      0.1311375324185642,
+      0.13081428553495142,
+      0.1307244317694789,
+      0.13003317120351962,
+      0.1300940734171678,
+      0.13099329189826098,
+      0.12981944043366683,
+      0.1295801114497913,
+      0.1300047513186222,
+      0.12914496065960043,
+      0.12794606171784892,
+      0.12684793857532362,
+      0.1268811183168538,
+      0.12673206855025557,
+      0.12623241545248126
+    ],
+    "train_aux": [
+      0.13301682834410006,
+      0.13167232100570958,
+      0.13131487362145905,
+      0.1312427306547761,
+      0.13070152534378898,
+      0.1310292390426473,
+      0.13062555200996853,
+      0.13012772887235596,
+      0.12937162822437664,
+      0.12945439030845013,
+      0.12893953475923764,
+      0.12892931480965916,
+      0.1288637715495295,
+      0.12900101638857334,
+      0.12870109988938247,
+      0.1287175091131339,
+      0.12867912756545202,
+      0.1285422614199065,
+      0.1284324052551436,
+      0.12828397703549219,
+      0.12828821573583854,
+      0.12828479976289803,
+      0.12818652596915997
+    ],
+    "val_loss": [
+      0.13591514403621355,
+      0.13559475354850292,
+      0.1348991395284732,
+      0.13445008707543213,
+      0.13593138232827187,
+      0.14014545989533264,
+      0.13999194415907065,
+      0.13596316799521446,
+      0.13418646926681202,
+      0.13972745562593142,
+      0.14174563077588875,
+      0.13687763723234336,
+      0.14567147915561993,
+      0.13537510198851427,
+      0.1421120844781399,
+      0.1423038667688767,
+      0.1372078945239385,
+      0.13854192793369294,
+      0.1413120313237111,
+      0.1389801673591137,
+      0.13734573684632778,
+      0.14081213337679704,
+      0.1400089219212532
+    ],
+    "val_corr_6m": [
+      0.03201291074122613,
+      0.03830543945465858,
+      0.04166812440380454,
+      0.05296785421281432,
+      0.051398092640253405,
+      0.0486304975527067,
+      0.06155356627083772,
+      0.06271238116217621,
+      0.06197779365077925,
+      0.05875783093118419,
+      0.044766810024157166,
+      0.04003519167890772,
+      0.04516931065203001,
+      0.04808993351180106,
+      0.04799385328466694,
+      0.036496999815184,
+      0.04407774145559718,
+      0.05127789040561766,
+      0.02387300911359489,
+      0.03041913324656586,
+      0.032251264651616415,
+      0.0171393145651867,
+      0.01695034624620651
+    ]
+  },
+  "val_metrics": {
+    "loss": 0.13596316799521446,
+    "rank_corr": {
+      "target_3m": 0.06496787081317355,
+      "target_6m": 0.06271238116217621,
+      "target_12m": 0.08662284039892257
+    }
+  },
+  "test_metrics": {
+    "loss": 0.11149086637112002,
+    "rank_corr": {
+      "target_3m": 0.032009975705295804,
+      "target_6m": 0.12302096720474462,
+      "target_12m": 0.14597245273956408
+    }
+  },
+  "config": {
+    "data_path": "data\\Global Factor_EM.parquet",
+    "output_dir": "data\\processed",
+    "results_dir": "results\\transformer",
+    "train_path": "data\\processed\\train.parquet",
+    "val_path": "data\\processed\\val.parquet",
+    "test_path": "data\\processed\\test.parquet",
+    "col_metadata_path": "data\\processed\\column_metadata.json",
+    "country_lookup_path": "data\\processed\\country_lookup.parquet",
+    "train_end": "2015-12-31",
+    "val_end": "2020-12-31",
+    "missing_col_threshold": 0.3,
+    "d_model": 64,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 128,
+    "dropout": 0.1,
+    "top_k_attention": 50,
+    "ple_num_bins": 16,
+    "periodic_num_freq": 32,
+    "n_mlp_layers": 2,
+    "lambda_aux": 0.3,
+    "min_firms_attention": 30,
+    "warmup_epochs": 5,
+    "learning_rate": 0.0001,
+    "weight_decay": 1e-05,
+    "max_epochs": 100,
+    "patience": 15,
+    "grad_clip": 1.0,
+    "lambda_3m": 0.1,
+    "lambda_6m": 0.7,
+    "lambda_12m": 0.2,
+    "target_vol": 0.1,
+    "vol_lookback": 6,
+    "max_leverage_long_only": 3.0,
+    "max_leverage_long_short": 3.0,
+    "min_firms_country": 20,
+    "max_position_weight": 0.05,
+    "encoding_variant": "periodic",
+    "seed": 24
+  },
+  "feature_columns": {
+    "k0": [
+      "market_equity",
+      "chcsho_1m",
+      "chcsho_3m",
+      "chcsho_6m",
+      "chcsho_12m",
+      "eqnpo_1m",
+      "eqnpo_3m",
+      "eqnpo_6m",
+      "eqnpo_12m",
+      "ret_1_0",
+      "ret_3_1",
+      "ret_6_1",
+      "ret_9_1",
+      "ret_12_1",
+      "ret_12_7",
+      "ret_2_0",
+      "ret_3_0",
+      "ret_6_0",
+      "ret_9_0",
+      "ret_12_0",
+      "ret_18_1",
+      "ret_24_1",
+      "ret_24_12",
+      "ret_36_1",
+      "ret_36_12",
+      "seas_1_1an",
+      "seas_1_1na",
+      "ivol_capm_21d",
+      "ivol_capm_252d",
+      "iskew_capm_21d",
+      "rvol_21d",
+      "rvol_252d",
+      "rvolhl_21d",
+      "rmax1_21d",
+      "rmax5_21d",
+      "rmax5_rvol_21d",
+      "rskew_21d",
+      "coskew_21d",
+      "beta_21d",
+      "beta_252d",
+      "beta_dimson_21d",
+      "betadown_252d",
+      "ami_126d",
+      "dolvol_126d",
+      "dolvol_var_126d",
+      "turnover_126d",
+      "turnover_var_126d",
+      "zero_trades_21d",
+      "zero_trades_126d",
+      "zero_trades_252d",
+      "bidaskhl_21d",
+      "prc_highprc_252d",
+      "age",
+      "mispricing_mgmt",
+      "mispricing_perf"
+    ],
+    "k1": [
+      "at_gr1",
+      "sale_gr1",
+      "inv_gr1a",
+      "fnl_gr1a",
+      "nfna_gr1a",
+      "tax_gr1a",
+      "be_gr1a",
+      "ebit_sale",
+      "ope_be",
+      "ni_be",
+      "ebit_bev",
+      "dbnetis_at",
+      "at_turnover",
+      "sale_bev",
+      "cash_at",
+      "op_atl1",
+      "ocf_at",
+      "op_at",
+      "ocf_at_chg1",
+      "at_be",
+      "at_me",
+      "be_me",
+      "debt_me",
+      "netdebt_me",
+      "sale_me",
+      "ni_me",
+      "ocf_me",
+      "bev_mev",
+      "ebitda_mev",
+      "qmj_prof",
+      "qmj_safety",
+      "lt_gr1",
+      "be_gr1",
+      "cash_gr1a",
+      "debtst_gr1a",
+      "ap_gr1a",
+      "debtlt_gr1a",
+      "fna_gr1a",
+      "ebitda_gr1a",
+      "ebit_gr1a",
+      "ni_gr1a",
+      "nix_gr1a",
+      "dp_gr1a",
+      "ocf_gr1a",
+      "dltnetis_gr1a",
+      "dbnetis_gr1a",
+      "xido_at",
+      "ebitda_sale",
+      "pi_sale",
+      "ni_sale",
+      "nix_sale",
+      "ocf_sale",
+      "ebitda_at",
+      "ebit_at",
+      "fi_at",
+      "ni_at",
+      "nix_be",
+      "ocf_be",
+      "ebitda_bev",
+      "fi_bev",
+      "ebitda_ppen",
+      "dltnetis_at",
+      "dstnetis_at",
+      "be_bev",
+      "debt_bev",
+      "cash_bev",
+      "debtlt_bev",
+      "debtst_bev",
+      "ebitda_debt",
+      "ocf_debt",
+      "cash_lt",
+      "debtst_debt",
+      "debtlt_debt",
+      "lt_ppen",
+      "debtlt_be",
+      "debt_at",
+      "debt_be",
+      "ebit_int",
+      "sale_be",
+      "cash_me",
+      "ebitda_me",
+      "ebit_me",
+      "ope_me",
+      "nix_me",
+      "at_mev",
+      "ppen_mev",
+      "be_mev",
+      "cash_mev",
+      "sale_mev",
+      "ebit_mev",
+      "ocf_mev",
+      "debt_mev",
+      "debtlt_mev",
+      "debtst_mev",
+      "dltnetis_mev",
+      "dstnetis_mev",
+      "dbnetis_mev"
+    ]
+  },
+  "countries": {
+    "country_to_id": {
+      "ARE": 0,
+      "BRA": 1,
+      "CHL": 2,
+      "CHN": 3,
+      "COL": 4,
+      "CZE": 5,
+      "EGY": 6,
+      "GRC": 7,
+      "HUN": 8,
+      "IDN": 9,
+      "IND": 10,
+      "KOR": 11,
+      "KWT": 12,
+      "MEX": 13,
+      "MYS": 14,
+      "PER": 15,
+      "PHL": 16,
+      "POL": 17,
+      "QAT": 18,
+      "SAU": 19,
+      "THA": 20,
+      "TUR": 21,
+      "TWN": 22,
+      "ZAF": 23
+    },
+    "country_codes": [
+      "ARE",
+      "BRA",
+      "CHL",
+      "CHN",
+      "COL",
+      "CZE",
+      "EGY",
+      "GRC",
+      "HUN",
+      "IDN",
+      "IND",
+      "KOR",
+      "KWT",
+      "MEX",
+      "MYS",
+      "PER",
+      "PHL",
+      "POL",
+      "QAT",
+      "SAU",
+      "THA",
+      "TUR",
+      "TWN",
+      "ZAF"
+    ]
+  },
+  "model_architecture": {
+    "encoding_variant": "periodic",
+    "d_model": 64,
+    "n_heads": 4,
+    "n_layers": 2,
+    "d_ff": 128,
+    "dropout": 0.1,
+    "top_k_attention": 50,
+    "n_mlp_layers": 2,
+    "min_firms_attention": 30,
+    "n_k0_characteristics": 55,
+    "n_k1_characteristics": 97,
+    "n_countries": 24,
+    "parameter_counts": {
+      "k0_encoder": 5632,
+      "k1_encoder": 8320,
+      "k0_agg": 65,
+      "k1_agg": 65,
+      "base_head_3m": 25089,
+      "base_head_6m": 25089,
+      "base_head_12m": 25089,
+      "blocks": 83456,
+      "adj_head_3m": 193,
+      "adj_head_6m": 193,
+      "adj_head_12m": 193,
+      "_top_level_parameters": 9728,
+      "_total": 183112
+    },
+    "tensor_shapes": [
+      {
+        "stage": "k0_encoder",
+        "module": "PeriodicEncoder",
+        "input_shape": [
+          2,
+          55
+        ],
+        "output_shape": [
+          2,
+          55,
+          64
+        ],
+        "description": "K0 characteristic encoding to R^d"
+      },
+      {
+        "stage": "k0_agg",
+        "module": "AttentiveAggregation",
+        "input_shape": [
+          2,
+          55,
+          64
+        ],
+        "output_shape": [
+          2,
+          64
+        ],
+        "description": "K0 attention-weighted aggregation to firm token"
+      },
+      {
+        "stage": "k1_encoder",
+        "module": "PeriodicEncoder",
+        "input_shape": [
+          2,
+          97
+        ],
+        "output_shape": [
+          2,
+          97,
+          64
+        ],
+        "description": "K1 characteristic encoding to R^d"
+      },
+      {
+        "stage": "k1_agg",
+        "module": "AttentiveAggregation",
+        "input_shape": [
+          2,
+          97,
+          64
+        ],
+        "output_shape": [
+          2,
+          64
+        ],
+        "description": "K1 attention-weighted aggregation to firm token"
+      },
+      {
+        "stage": "base_head_3m",
+        "module": "FirmScoreHead",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2
+        ],
+        "description": "Per firm base score head, 3 month horizon"
+      },
+      {
+        "stage": "base_head_6m",
+        "module": "FirmScoreHead",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2
+        ],
+        "description": "Per firm base score head, 6 month horizon"
+      },
+      {
+        "stage": "base_head_12m",
+        "module": "FirmScoreHead",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2
+        ],
+        "description": "Per firm base score head, 12 month horizon"
+      },
+      {
+        "stage": "blocks.0",
+        "module": "TransformerBlock",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2,
+          64
+        ],
+        "description": "Cross sectional Transformer block"
+      },
+      {
+        "stage": "blocks.1",
+        "module": "TransformerBlock",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2,
+          64
+        ],
+        "description": "Cross sectional Transformer block"
+      },
+      {
+        "stage": "adj_head_3m",
+        "module": "Sequential",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2,
+          1
+        ],
+        "description": "Cross sectional adjustment head, 3 month horizon"
+      },
+      {
+        "stage": "adj_head_6m",
+        "module": "Sequential",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2,
+          1
+        ],
+        "description": "Cross sectional adjustment head, 6 month horizon"
+      },
+      {
+        "stage": "adj_head_12m",
+        "module": "Sequential",
+        "input_shape": [
+          2,
+          64
+        ],
+        "output_shape": [
+          2,
+          1
+        ],
+        "description": "Cross sectional adjustment head, 12 month horizon"
+      }
+    ]
+  },
+  "portfolio_metrics": {
+    "long_only": {
+      "cumulative_return": 0.5001969960209491,
+      "annualised_return": 0.08450025458460853,
+      "annualised_vol": 0.08148884091782735,
+      "sharpe_ratio": 1.0542173556851253,
+      "max_drawdown": 0.05019549042254683,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          0.9398626598345282,
+          0.7570431051685209,
+          0.6748751648733521,
+          1.4917977367027573,
+          1.1694172705857062
+        ],
+        "mean": 1.006599187432973,
+        "std": 0.33117223233132387
+      },
+      "sharpe_5y": 1.0542173556851253
+    },
+    "long_only_unscaled": {
+      "cumulative_return": 0.7689434615413178,
+      "annualised_return": 0.12083785538460767,
+      "annualised_vol": 0.12807742754565257,
+      "sharpe_ratio": 0.9736045754933643,
+      "max_drawdown": 0.07732221060336841,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          0.9987682954070329,
+          0.8660608721808788,
+          0.6499908401850925,
+          2.666013733335322,
+          1.8192630894162463
+        ],
+        "mean": 1.4000193661049145,
+        "std": 0.8347400676345827
+      },
+      "sharpe_5y": 0.9736045754933643
+    },
+    "long_short": {
+      "cumulative_return": 0.7215097311582257,
+      "annualised_return": 0.11476133346974327,
+      "annualised_vol": 0.11298328565389713,
+      "sharpe_ratio": 1.0407470452903038,
+      "max_drawdown": 0.09500255909157998,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          2.073220976756497,
+          2.0156103857378325,
+          1.1258531494570592,
+          0.895768518964073,
+          0.7338903868682933
+        ],
+        "mean": 1.3688686835567512,
+        "std": 0.6325473767024443
+      },
+      "sharpe_5y": 1.0407470452903038
+    },
+    "long_short_unscaled": {
+      "cumulative_return": 1.2031358976837412,
+      "annualised_return": 0.17113849776808077,
+      "annualised_vol": 0.13360041836684625,
+      "sharpe_ratio": 1.292168045012336,
+      "max_drawdown": 0.08959121475060679,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          2.97549471320077,
+          3.005132776124183,
+          1.5244451740380915,
+          1.1282230864429315,
+          0.8483791286205261
+        ],
+        "mean": 1.8963349756853003,
+        "std": 1.0271961421382105
+      },
+      "sharpe_5y": 1.292168045012336
+    },
+    "country_composite_long_only": {
+      "cumulative_return": 0.41698615237870884,
+      "annualised_return": 0.07219337942394066,
+      "annualised_vol": 0.08477214682068318,
+      "sharpe_ratio": 0.8768058078214094,
+      "max_drawdown": 0.047955383510578306,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          0.5383262876615219,
+          0.130681874279196,
+          0.36036929367004816,
+          1.0731360593720705,
+          0.9869713328217973
+        ],
+        "mean": 0.6178969695609268,
+        "std": 0.4041933512709528
+      },
+      "sharpe_5y": 0.8768058078214094
+    },
+    "country_composite_long_only_unscaled": {
+      "cumulative_return": 0.4774585133538285,
+      "annualised_return": 0.08119258598937718,
+      "annualised_vol": 0.11361303696996267,
+      "sharpe_ratio": 0.752499253560538,
+      "max_drawdown": 0.06838551481325125,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          0.611460004279402,
+          0.2026304834668644,
+          0.1436258321248858,
+          1.1123669678997032,
+          0.9281125838698434
+        ],
+        "mean": 0.5996391743281398,
+        "std": 0.4290945035724118
+      },
+      "sharpe_5y": 0.752499253560538
+    },
+    "country_composite_long_short": {
+      "cumulative_return": 0.21736738721616322,
+      "annualised_return": 0.04012212024016382,
+      "annualised_vol": 0.07689010666135902,
+      "sharpe_ratio": 0.5524386348751762,
+      "max_drawdown": 0.07481357915130127,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          1.7738590280996518,
+          1.3660674271647,
+          0.9286960495050401,
+          0.6478195256230538,
+          0.5226598149100139
+        ],
+        "mean": 1.047820369060492,
+        "std": 0.519229768577268
+      },
+      "sharpe_5y": 0.5524386348751762
+    },
+    "country_composite_long_short_unscaled": {
+      "cumulative_return": 0.20915234732955623,
+      "annualised_return": 0.03871452496265748,
+      "annualised_vol": 0.037869264286922055,
+      "sharpe_ratio": 1.031253474042448,
+      "max_drawdown": 0.025492629494836862,
+      "n_rebalances": 10,
+      "rolling_sharpe_3y": {
+        "series": [
+          1.7281938626453548,
+          5.198045065845519,
+          2.1106967053715247,
+          1.299772534138165,
+          0.9131648910048602
+        ],
+        "mean": 2.249974611801085,
+        "std": 1.7082679170309383
+      },
+      "sharpe_5y": 1.031253474042448
+    }
+  },
+  "per_horizon_portfolio_metrics": {
+    "3m": {
+      "long_only": {
+        "cumulative_return": 0.3779018174441042,
+        "annualised_return": 0.0662122172250259,
+        "annualised_vol": 0.06522725034798268,
+        "sharpe_ratio": 1.02266960193918,
+        "max_drawdown": 0.04760036059375524,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.0007585884763204,
+            0.8478677167539372,
+            0.6544954280223367,
+            0.8687233145839703,
+            0.43872017660890333,
+            0.5065934753382791,
+            0.8239175809863061,
+            1.1686403511834038,
+            0.9424160994040142
+          ],
+          "mean": 0.8057925257063857,
+          "std": 0.23493308288622386
+        },
+        "sharpe_5y": 1.02266960193918
+      },
+      "long_only_unscaled": {
+        "cumulative_return": 0.8689463495476566,
+        "annualised_return": 0.1332334021874193,
+        "annualised_vol": 0.1306791853732132,
+        "sharpe_ratio": 1.0348296559902714,
+        "max_drawdown": 0.1206454378729513,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.0291085643712405,
+            0.8345907848774936,
+            0.5971025967590484,
+            0.7131625419562235,
+            0.39069620741425065,
+            0.5251846096467517,
+            0.7914272201688344,
+            1.1917942264310377,
+            0.9427366771292082
+          ],
+          "mean": 0.7795337143060098,
+          "std": 0.2538770859574197
+        },
+        "sharpe_5y": 1.0348296559902714
+      },
+      "long_short": {
+        "cumulative_return": 0.05760037046299038,
+        "annualised_return": 0.011263468614729932,
+        "annualised_vol": 0.06165477390799224,
+        "sharpe_ratio": 0.21325924326835766,
+        "max_drawdown": 0.10730728417587593,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            -0.07835446255665367,
+            -0.282898958209506,
+            -0.20782324170504538,
+            -0.03230096938180952,
+            0.5122186259584427,
+            0.4975314631961463,
+            0.8902090496425712,
+            1.151509090840862,
+            0.9202603967670222
+          ],
+          "mean": 0.3744834438391144,
+          "std": 0.5412363694876371
+        },
+        "sharpe_5y": 0.21325924326835766
+      },
+      "long_short_unscaled": {
+        "cumulative_return": 0.03639168731600462,
+        "annualised_return": 0.007174645107478117,
+        "annualised_vol": 0.1179793931563627,
+        "sharpe_ratio": 0.12229275999410533,
+        "max_drawdown": 0.21887528677834592,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            -0.06505747696719924,
+            -0.24560295423098166,
+            -0.17720620785795252,
+            -0.062452197183394155,
+            0.4413518081191175,
+            0.3232650385680369,
+            0.9695328184057722,
+            1.1940270963534807,
+            0.9310215590563349
+          ],
+          "mean": 0.3676532760292461,
+          "std": 0.5494454773914881
+        },
+        "sharpe_5y": 0.12229275999410533
+      },
+      "country_composite_long_only": {
+        "cumulative_return": 0.30905497518874436,
+        "annualised_return": 0.05533800212665274,
+        "annualised_vol": 0.06802323064238121,
+        "sharpe_ratio": 0.8302750310521843,
+        "max_drawdown": 0.05388192187068526,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.5756171002165938,
+            0.5086308653455749,
+            0.17519793932199268,
+            0.5297293230667292,
+            0.2608978039793809,
+            0.3725803638051327,
+            0.651761987195916,
+            1.0309362180833619,
+            0.8484021096615868
+          ],
+          "mean": 0.5504170789640299,
+          "std": 0.2713416514672864
+        },
+        "sharpe_5y": 0.8302750310521843
+      },
+      "country_composite_long_only_unscaled": {
+        "cumulative_return": 0.5857478894379182,
+        "annualised_return": 0.09659643180906996,
+        "annualised_vol": 0.12813133770871765,
+        "sharpe_ratio": 0.7908438874073112,
+        "max_drawdown": 0.14325915013921645,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.6339361199027356,
+            0.49362512301667694,
+            0.17194849896520062,
+            0.367197481514331,
+            0.129091684444049,
+            0.33553164854973,
+            0.5230041102014787,
+            1.0178242762626006,
+            0.7523518546985744
+          ],
+          "mean": 0.4916123108394863,
+          "std": 0.282749024196719
+        },
+        "sharpe_5y": 0.7908438874073112
+      },
+      "country_composite_long_short": {
+        "cumulative_return": 0.07035397353172135,
+        "annualised_return": 0.013690753703286207,
+        "annualised_vol": 0.06645069943355328,
+        "sharpe_ratio": 0.23886389388986004,
+        "max_drawdown": 0.14134100949477066,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.170072697581387,
+            2.002609408926175,
+            2.3025308771153514,
+            0.8970923643476316,
+            1.006219688788641,
+            0.9848385458435386,
+            0.38418958850838486,
+            0.029801270550533762,
+            -0.05788546199177004
+          ],
+          "mean": 1.079940997741097,
+          "std": 0.8988781609713357
+        },
+        "sharpe_5y": 0.23886389388986004
+      },
+      "country_composite_long_short_unscaled": {
+        "cumulative_return": 0.2694121844194408,
+        "annualised_return": 0.04886726779951167,
+        "annualised_vol": 0.0470240051340585,
+        "sharpe_ratio": 1.0439625773903796,
+        "max_drawdown": 0.04860704258151929,
+        "n_rebalances": 20,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.9754664430242,
+            1.8973400285957305,
+            2.6716410074601833,
+            1.8543290637111407,
+            1.8085619957500194,
+            1.8605809097468942,
+            1.243882186235139,
+            0.8145726930623733,
+            0.5698243178927606
+          ],
+          "mean": 1.6329109606087155,
+          "std": 0.6470233850461032
+        },
+        "sharpe_5y": 1.0439625773903796
+      }
+    },
+    "6m": {
+      "long_only": {
+        "cumulative_return": 0.5001969960209491,
+        "annualised_return": 0.08450025458460853,
+        "annualised_vol": 0.08148884091782735,
+        "sharpe_ratio": 1.0542173556851253,
+        "max_drawdown": 0.05019549042254683,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.9398626598345282,
+            0.7570431051685209,
+            0.6748751648733521,
+            1.4917977367027573,
+            1.1694172705857062
+          ],
+          "mean": 1.006599187432973,
+          "std": 0.33117223233132387
+        },
+        "sharpe_5y": 1.0542173556851253
+      },
+      "long_only_unscaled": {
+        "cumulative_return": 0.7689434615413178,
+        "annualised_return": 0.12083785538460767,
+        "annualised_vol": 0.12807742754565257,
+        "sharpe_ratio": 0.9736045754933643,
+        "max_drawdown": 0.07732221060336841,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.9987682954070329,
+            0.8660608721808788,
+            0.6499908401850925,
+            2.666013733335322,
+            1.8192630894162463
+          ],
+          "mean": 1.4000193661049145,
+          "std": 0.8347400676345827
+        },
+        "sharpe_5y": 0.9736045754933643
+      },
+      "long_short": {
+        "cumulative_return": 0.7215097311582257,
+        "annualised_return": 0.11476133346974327,
+        "annualised_vol": 0.11298328565389713,
+        "sharpe_ratio": 1.0407470452903038,
+        "max_drawdown": 0.09500255909157998,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.073220976756497,
+            2.0156103857378325,
+            1.1258531494570592,
+            0.895768518964073,
+            0.7338903868682933
+          ],
+          "mean": 1.3688686835567512,
+          "std": 0.6325473767024443
+        },
+        "sharpe_5y": 1.0407470452903038
+      },
+      "long_short_unscaled": {
+        "cumulative_return": 1.2031358976837412,
+        "annualised_return": 0.17113849776808077,
+        "annualised_vol": 0.13360041836684625,
+        "sharpe_ratio": 1.292168045012336,
+        "max_drawdown": 0.08959121475060679,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.97549471320077,
+            3.005132776124183,
+            1.5244451740380915,
+            1.1282230864429315,
+            0.8483791286205261
+          ],
+          "mean": 1.8963349756853003,
+          "std": 1.0271961421382105
+        },
+        "sharpe_5y": 1.292168045012336
+      },
+      "country_composite_long_only": {
+        "cumulative_return": 0.41698615237870884,
+        "annualised_return": 0.07219337942394066,
+        "annualised_vol": 0.08477214682068318,
+        "sharpe_ratio": 0.8768058078214094,
+        "max_drawdown": 0.047955383510578306,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.5383262876615219,
+            0.130681874279196,
+            0.36036929367004816,
+            1.0731360593720705,
+            0.9869713328217973
+          ],
+          "mean": 0.6178969695609268,
+          "std": 0.4041933512709528
+        },
+        "sharpe_5y": 0.8768058078214094
+      },
+      "country_composite_long_only_unscaled": {
+        "cumulative_return": 0.4774585133538285,
+        "annualised_return": 0.08119258598937718,
+        "annualised_vol": 0.11361303696996267,
+        "sharpe_ratio": 0.752499253560538,
+        "max_drawdown": 0.06838551481325125,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.611460004279402,
+            0.2026304834668644,
+            0.1436258321248858,
+            1.1123669678997032,
+            0.9281125838698434
+          ],
+          "mean": 0.5996391743281398,
+          "std": 0.4290945035724118
+        },
+        "sharpe_5y": 0.752499253560538
+      },
+      "country_composite_long_short": {
+        "cumulative_return": 0.21736738721616322,
+        "annualised_return": 0.04012212024016382,
+        "annualised_vol": 0.07689010666135902,
+        "sharpe_ratio": 0.5524386348751762,
+        "max_drawdown": 0.07481357915130127,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.7738590280996518,
+            1.3660674271647,
+            0.9286960495050401,
+            0.6478195256230538,
+            0.5226598149100139
+          ],
+          "mean": 1.047820369060492,
+          "std": 0.519229768577268
+        },
+        "sharpe_5y": 0.5524386348751762
+      },
+      "country_composite_long_short_unscaled": {
+        "cumulative_return": 0.20915234732955623,
+        "annualised_return": 0.03871452496265748,
+        "annualised_vol": 0.037869264286922055,
+        "sharpe_ratio": 1.031253474042448,
+        "max_drawdown": 0.025492629494836862,
+        "n_rebalances": 10,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.7281938626453548,
+            5.198045065845519,
+            2.1106967053715247,
+            1.299772534138165,
+            0.9131648910048602
+          ],
+          "mean": 2.249974611801085,
+          "std": 1.7082679170309383
+        },
+        "sharpe_5y": 1.031253474042448
+      }
+    },
+    "12m": {
+      "long_only": {
+        "cumulative_return": 0.5298450382023066,
+        "annualised_return": 0.08875331026913624,
+        "annualised_vol": 0.1626060011074714,
+        "sharpe_ratio": 0.6109727040605628,
+        "max_drawdown": 0.0007141629845193773,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.8310551918014082,
+            1.2248092530730215,
+            1.234553717941072
+          ],
+          "mean": 1.0968060542718339,
+          "std": 0.2301985649970966
+        },
+        "sharpe_5y": 0.6109727040605628
+      },
+      "long_only_unscaled": {
+        "cumulative_return": 0.6776632286326125,
+        "annualised_return": 0.1090240318440685,
+        "annualised_vol": 0.1714490467289817,
+        "sharpe_ratio": 0.7038230593997261,
+        "max_drawdown": 0.001391888418270899,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.9357531514826352,
+            1.2244892098487778,
+            1.2500002784240365
+          ],
+          "mean": 1.13674754658515,
+          "std": 0.17453298771846032
+        },
+        "sharpe_5y": 0.7038230593997261
+      },
+      "long_short": {
+        "cumulative_return": 1.5930032806688952,
+        "annualised_return": 0.2099310256048843,
+        "annualised_vol": 0.43549399492502505,
+        "sharpe_ratio": 0.6154103885304963,
+        "max_drawdown": 0.0011453294102179755,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.910981213043283,
+            1.0438437306630783,
+            0.7483673900505271
+          ],
+          "mean": 0.9010641112522961,
+          "std": 0.14798759625859084
+        },
+        "sharpe_5y": 0.6154103885304963
+      },
+      "long_short_unscaled": {
+        "cumulative_return": 1.6246072213181004,
+        "annualised_return": 0.21286611767762875,
+        "annualised_vol": 0.24047981515188657,
+        "sharpe_ratio": 0.9791412105104179,
+        "max_drawdown": 0.0022561678590522468,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.9935737375004572,
+            1.028733696408214,
+            0.734850757519416
+          ],
+          "mean": 1.2523860638093625,
+          "std": 0.658491587771774
+        },
+        "sharpe_5y": 0.9791412105104179
+      },
+      "country_composite_long_only": {
+        "cumulative_return": 0.3104594074195921,
+        "annualised_return": 0.055564350918105854,
+        "annualised_vol": 0.12117931729953008,
+        "sharpe_ratio": 0.510527305063315,
+        "max_drawdown": 0.03406902604733715,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.5907075388933809,
+            0.11095393162628513,
+            0.6428426249062092
+          ],
+          "mean": 0.44816803180862513,
+          "std": 0.2931970818745135
+        },
+        "sharpe_5y": 0.510527305063315
+      },
+      "country_composite_long_only_unscaled": {
+        "cumulative_return": 0.3545801973109186,
+        "annualised_return": 0.06257830483506632,
+        "annualised_vol": 0.1318485520652061,
+        "sharpe_ratio": 0.5309970072220752,
+        "max_drawdown": 0.04594893455695585,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.5630533619387501,
+            0.18971818520070147,
+            0.6533950861839132
+          ],
+          "mean": 0.4687222111077882,
+          "std": 0.24581058081207371
+        },
+        "sharpe_5y": 0.5309970072220752
+      },
+      "country_composite_long_short": {
+        "cumulative_return": 0.382805897034286,
+        "annualised_return": 0.06697008857205011,
+        "annualised_vol": 0.059318622729584235,
+        "sharpe_ratio": 1.1566731635953857,
+        "max_drawdown": 0.007955315998996458,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.6442480053393234,
+            3.009544071866307,
+            1.0513053180954341
+          ],
+          "mean": 1.9016991317670218,
+          "std": 1.0041840299799103
+        },
+        "sharpe_5y": 1.1566731635953857
+      },
+      "country_composite_long_short_unscaled": {
+        "cumulative_return": 0.19817364171153162,
+        "annualised_return": 0.03682139958800246,
+        "annualised_vol": 0.029111576646911833,
+        "sharpe_ratio": 1.27892082588334,
+        "max_drawdown": 0.002651771999665402,
+        "n_rebalances": 5,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.690751379562351,
+            5.2516235774295215,
+            1.3094655130689399
+          ],
+          "mean": 2.750613490020271,
+          "std": 2.1743121489310195
+        },
+        "sharpe_5y": 1.27892082588334
+      }
+    }
+  },
+  "per_country": {
+    "country_composite_long_only": {
+      "ARE": {
+        "country_code": "ARE",
+        "country_id": 0,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.16855928808804801,
+          0.2009016841627558,
+          0.06943447367607428,
+          0.030194074591670415,
+          0.14071848150197852,
+          -0.029438240570701546,
+          -0.009232377784858761,
+          0.06990876769862503,
+          0.10297019767542549,
+          0.0
+        ],
+        "weights": [
+          0.010352905197294229,
+          0.01674385331264082,
+          0.01974634346536538,
+          0.025560463635171764,
+          0.031068545497200603,
+          0.032411631370442895,
+          0.03541405479019088,
+          0.03602079920575379,
+          0.03888545451269022,
+          0.03655321293788375
+        ],
+        "annualised_return": 0.14884935124860021,
+        "annualised_vol": 0.10525602221793035,
+        "sharpe_ratio": 1.4137268982073963,
+        "max_drawdown": 0.038398833397290034,
+        "cumulative_return": 1.0013148443453632,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.6959293304422582,
+            1.1645277458614338,
+            1.1351424622933821,
+            1.1975514491046935,
+            1.0322289719564826
+          ],
+          "mean": 1.24507599193165,
+          "std": 0.25952098653726335
+        },
+        "sharpe_5y": 1.4137268982073963,
+        "time_average_contribution": 0.001686483200314215,
+        "cumulative_contribution": 0.01697774221799242
+      },
+      "BRA": {
+        "country_code": "BRA",
+        "country_id": 1,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.26191433814250015,
+          -0.20772440443502016,
+          -0.15690198572861813,
+          0.03174860785169371,
+          0.23430827176129826,
+          -0.09429870189584522,
+          -0.1965609142402502,
+          -0.13014969804630538,
+          0.09157955056255235,
+          0.0
+        ],
+        "weights": [
+          0.0246605497549381,
+          0.025799983893852983,
+          0.02042911448818999,
+          0.01952703236735043,
+          0.020907245870578184,
+          0.022359545661958802,
+          0.022068077249995488,
+          0.01802026747902025,
+          0.01599752753301404,
+          0.014862730954442946
+        ],
+        "annualised_return": -0.05801514308473088,
+        "annualised_vol": 0.22907243297080687,
+        "sharpe_ratio": -0.14500648015482565,
+        "max_drawdown": 0.4615636888162541,
+        "cumulative_return": -0.2583148114103384,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.08905520281658792,
+            -0.5885692883457583,
+            -0.5017166110845278,
+            -0.10223034724026815,
+            -0.15456397319666376
+          ],
+          "mean": -0.251605003410126,
+          "std": 0.28455222331447194
+        },
+        "sharpe_5y": -0.14500648015482565,
+        "time_average_contribution": -0.0003913490171210987,
+        "cumulative_contribution": -0.003973544786365024
+      },
+      "CHL": {
+        "country_code": "CHL",
+        "country_id": 2,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.03926685625878987,
+          -0.01879747704728732,
+          -0.06471916968905753,
+          0.19713459473395462,
+          0.10460995087581537,
+          -0.10580643769754154,
+          0.050357635326405456,
+          0.0027710148550923394,
+          0.09115820187741903,
+          0.0
+        ],
+        "weights": [
+          0.006934880491986736,
+          0.006142856705246474,
+          0.005503410904450152,
+          0.005200023012841449,
+          0.0059044345378572284,
+          0.006503639367376029,
+          0.006114089212491669,
+          0.005920415678570309,
+          0.006047331055927907,
+          0.006202143702605594
+        ],
+        "annualised_return": 0.0368184693328415,
+        "annualised_vol": 0.12100363928227219,
+        "sharpe_ratio": 0.3593965574353881,
+        "max_drawdown": 0.1058064376975415,
+        "cumulative_return": 0.19815671047027061,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.16416393703825893,
+            0.37247584486915153,
+            0.4272100499099852,
+            0.8567845549408054,
+            0.48034898040603946
+          ],
+          "mean": 0.46019667343284815,
+          "std": 0.2520448895275999
+        },
+        "sharpe_5y": 0.3593965574353881,
+        "time_average_contribution": 0.00010862432350260717,
+        "cumulative_contribution": 0.001085572829595094
+      },
+      "CHN": {
+        "country_code": "CHN",
+        "country_id": 3,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.16455444108750425,
+          0.056582855541961595,
+          -0.03171283458038651,
+          -0.007621937710429896,
+          -0.05266489546360901,
+          -0.24034847725620012,
+          -0.050868612366631476,
+          0.2035426275657337,
+          0.21695692222920557,
+          0.0
+        ],
+        "weights": [
+          0.4518490275162102,
+          0.43428785299620165,
+          0.4310619472513281,
+          0.4273428437275454,
+          0.42808038662126674,
+          0.38925225259471025,
+          0.3290096134588951,
+          0.31687904758816515,
+          0.3572844912795968,
+          0.372677105562606
+        ],
+        "annualised_return": 0.0341538413373621,
+        "annualised_vol": 0.187773263266835,
+        "sharpe_ratio": 0.275246948954517,
+        "max_drawdown": 0.3436647801333781,
+        "cumulative_return": 0.1828393047698187,
+        "rolling_sharpe_3y": {
+          "series": [
+            -0.21423584337690904,
+            -0.8466531442609448,
+            -0.32764313838955356,
+            0.10254774267179326,
+            0.11396800909090445
+          ],
+          "mean": -0.23440327485294193,
+          "std": 0.3933347301352951
+        },
+        "sharpe_5y": 0.275246948954517,
+        "time_average_contribution": 0.009117611433742562,
+        "cumulative_contribution": 0.08136382444848067
+      },
+      "COL": {
+        "country_code": "COL",
+        "country_id": 4,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.09048204767271327,
+          0.15086625143362814,
+          -0.13193304310260084,
+          -0.10617223744495134,
+          0.19547497726862728,
+          0.010076277297090305,
+          -0.003997512459957962,
+          0.06546558982549236,
+          0.09665048101139122,
+          0.0
+        ],
+        "weights": [
+          0.003420843571285455,
+          0.002970959839374518,
+          0.0031958209030076784,
+          0.002648922550390585,
+          0.002388544979596632,
+          0.0026089176579130813,
+          0.0028266645211509336,
+          0.0026017232030112933,
+          0.0027298251185602445,
+          0.0028019773284579446
+        ],
+        "annualised_return": 0.026788954967742473,
+        "annualised_vol": 0.1470536245934787,
+        "sharpe_ratio": 0.25289922185876135,
+        "max_drawdown": 0.2240976541684279,
+        "cumulative_return": 0.14131609524075084,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.051376561304646566,
+            0.2230054509101961,
+            0.06258221503809352,
+            0.6508396680203915,
+            1.2140061506603055
+          ],
+          "mean": 0.4403620091867266,
+          "std": 0.49600837378549273
+        },
+        "sharpe_5y": 0.25289922185876135,
+        "time_average_contribution": 3.518678136386425e-05,
+        "cumulative_contribution": 0.0003514940959123969
+      },
+      "EGY": {
+        "country_code": "EGY",
+        "country_id": 6,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.2510612928721363,
+          -0.11544212092371567,
+          -0.24232661592931581,
+          -0.087712513569157,
+          0.057043600173837486,
+          0.5956160533041285,
+          -0.332068697449051,
+          0.22365573311523695,
+          0.25590350356433617,
+          0.0
+        ],
+        "weights": [
+          0.0017067488981468567,
+          0.0015973562904911137,
+          0.0015987310452214962,
+          0.0012199235081268485,
+          0.0012166505127531335,
+          0.0013416540630491098,
+          0.0024829160649710467,
+          0.0014772518213958241,
+          0.001555833856829622,
+          0.001552937280666161
+        ],
+        "annualised_return": 0.05778509141704413,
+        "annualised_vol": 0.371449588315713,
+        "sharpe_ratio": 0.3261439798089621,
+        "max_drawdown": 0.38857948785889934,
+        "cumulative_return": 0.3243025294668258,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.3876477133081733,
+            -0.09763387536824689,
+            0.16280176397012297,
+            0.5777362466927343,
+            0.6688265923236298
+          ],
+          "mean": 0.3398756881852827,
+          "std": 0.3121851621430025
+        },
+        "sharpe_5y": 0.3261439798089621,
+        "time_average_contribution": 5.222320395022386e-05,
+        "cumulative_contribution": 0.0005213829191912378
+      },
+      "GRC": {
+        "country_code": "GRC",
+        "country_id": 7,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.27478252715563395,
+          0.05860228897053909,
+          -0.18578348730541258,
+          0.20734676586374193,
+          0.2711938734208672,
+          0.0027657291770271705,
+          -0.024473318297675777,
+          -0.02648667743152715,
+          0.3058508730537188,
+          0.0
+        ],
+        "weights": [
+          0.002021459445550365,
+          0.0022443221919724514,
+          0.0023094882214073392,
+          0.00205878125328199,
+          0.0025250848767985135,
+          0.003205280975188596,
+          0.0034611207490243467,
+          0.0035289926605060517,
+          0.003502054834355298,
+          0.004300786407291903
+        ],
+        "annualised_return": 0.15964578512929628,
+        "annualised_vol": 0.2221426879736955,
+        "sharpe_ratio": 0.7957035027068418,
+        "max_drawdown": 0.1857834873054126,
+        "cumulative_return": 1.097136838495822,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.8963908149934839,
+            0.5142341596285175,
+            0.374183102398809,
+            1.221608654671241,
+            0.8749334275206021
+          ],
+          "mean": 0.7762700318425307,
+          "std": 0.336461979401439
+        },
+        "sharpe_5y": 0.7957035027068418,
+        "time_average_contribution": 0.00022713836275770532,
+        "cumulative_contribution": 0.002272800929029817
+      },
+      "HUN": {
+        "country_code": "HUN",
+        "country_id": 8,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.02254534639730331,
+          -0.019959923934395565,
+          -0.3170611725654453,
+          0.08015243667394904,
+          0.04069371471996419,
+          0.26153957861922617,
+          0.08965651791999041,
+          0.01651047994295403,
+          0.14291175843697512,
+          0.0
+        ],
+        "weights": [
+          0.0011509553605859896,
+          0.0011696430797136274,
+          0.0012196653754398266,
+          0.0007468015788614344,
+          0.0008807800853300209,
+          0.0009605997577209344,
+          0.001514039066209102,
+          0.0015046444898174785,
+          0.0016038801980689968,
+          0.0017973564032785685
+        ],
+        "annualised_return": 0.032687833555782086,
+        "annualised_vol": 0.19962946892416072,
+        "sharpe_ratio": 0.2724027117651742,
+        "max_drawdown": 0.3306925796128843,
+        "cumulative_return": 0.1744791258172358,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.031241916550749677,
+            0.18252300526901954,
+            0.23309836171574033,
+            1.8518075630771358,
+            1.4507796179825598
+          ],
+          "mean": 0.7498900929190411,
+          "std": 0.8382873231132365
+        },
+        "sharpe_5y": 0.2724027117651742,
+        "time_average_contribution": 3.0073104013889378e-05,
+        "cumulative_contribution": 0.0003006310462077
+      },
+      "IDN": {
+        "country_code": "IDN",
+        "country_id": 9,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.29143078951151,
+          0.1789950254787235,
+          0.010010663268179745,
+          -0.05316514393341641,
+          -0.00946127464642315,
+          -0.12245676563279503,
+          -0.0534743270084611,
+          0.2453420200108028,
+          0.19994008963267307,
+          0.0
+        ],
+        "weights": [
+          0.019815259718294446,
+          0.01833742734583191,
+          0.02118922683071758,
+          0.023968422505817315,
+          0.0242232207470825,
+          0.025356740480163363,
+          0.029205978083157853,
+          0.02877022845344889,
+          0.027745924759238524,
+          0.026953847398901675
+        ],
+        "annualised_return": 0.12351992297624026,
+        "annualised_vol": 0.19534188523762164,
+        "sharpe_ratio": 0.7035470921609089,
+        "max_drawdown": 0.2209835712072396,
+        "cumulative_return": 0.790209634445826,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.4913470976179803,
+            -0.12485717582541446,
+            0.03406712103330926,
+            0.3537749745862841,
+            0.459016630564889
+          ],
+          "mean": 0.24266972959540967,
+          "std": 0.27367036051485977
+        },
+        "sharpe_5y": 0.7035470921609089,
+        "time_average_contribution": 0.0015704930296520467,
+        "cumulative_contribution": 0.015758786788489187
+      },
+      "IND": {
+        "country_code": "IND",
+        "country_id": 10,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.6653743281303623,
+          0.44363341457426425,
+          -0.05605700394036696,
+          0.15980429787675324,
+          0.13616527070140835,
+          0.44218731145269236,
+          0.17317016253576187,
+          -0.017732706396551726,
+          -0.010929978708832826,
+          0.0
+        ],
+        "weights": [
+          0.10472682784516953,
+          0.11989340436963453,
+          0.1311792236688354,
+          0.1330404796705511,
+          0.12876594752341697,
+          0.14503103477325893,
+          0.1842676144058774,
+          0.20951651706688904,
+          0.18253348373497824,
+          0.17603160509805127
+        ],
+        "annualised_return": 0.3750422321920164,
+        "annualised_vol": 0.3280381813622113,
+        "sharpe_ratio": 1.1801157342036563,
+        "max_drawdown": 0.0560570039403669,
+        "cumulative_return": 3.915641307992101,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.7539502212271676,
+            1.727925895107268,
+            1.2237273432460263,
+            1.361103836161201,
+            1.051925144488321
+          ],
+          "mean": 1.4237264880459968,
+          "std": 0.30973476021171514
+        },
+        "sharpe_5y": 1.1801157342036563,
+        "time_average_contribution": 0.024464179347371242,
+        "cumulative_contribution": 0.2688017995430483
+      },
+      "KOR": {
+        "country_code": "KOR",
+        "country_id": 11,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.21778163386344832,
+          -0.18153088756985372,
+          -0.114138895323264,
+          0.011849522655580688,
+          0.008208684285490136,
+          -0.09426193515842957,
+          -0.05450749233905638,
+          -0.1483112379387089,
+          0.1967344339743164,
+          0.0
+        ],
+        "weights": [
+          0.07920577945186606,
+          0.08031318156396285,
+          0.0635485512513723,
+          0.06358441272927157,
+          0.06596963776303538,
+          0.07099092188942394,
+          0.06735432378701958,
+          0.06850188699069963,
+          0.057727744514797626,
+          0.07075355842179348
+        ],
+        "annualised_return": -0.046965492687382815,
+        "annualised_vol": 0.18092697646493464,
+        "sharpe_ratio": -0.17485084495526632,
+        "max_drawdown": 0.460519288336637,
+        "cumulative_return": -0.21378173495567443,
+        "rolling_sharpe_3y": {
+          "series": [
+            -0.2795771987606447,
+            -1.4635015248617274,
+            -1.5370937148466508,
+            -0.1731248553587492,
+            -0.1993457338108112
+          ],
+          "mean": -0.7305286055277167,
+          "std": 0.7042740821620399
+        },
+        "sharpe_5y": -0.17485084495526632,
+        "time_average_contribution": -0.0012453773126429764,
+        "cumulative_contribution": -0.01279766267377902
+      },
+      "KWT": {
+        "country_code": "KWT",
+        "country_id": 12,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.3066417370124468,
+          0.1620634051781002,
+          -0.08644489950210214,
+          -0.08636504889928077,
+          0.057324149616664155,
+          0.08065145733706314,
+          0.06020691801732547,
+          0.21892839461247335,
+          0.26406573545168494,
+          0.0
+        ],
+        "weights": [
+          0.004238125279673354,
+          0.004521294740895097,
+          0.00489779479485439,
+          0.005439917583018563,
+          0.0054776717869168615,
+          0.0053288640786762044,
+          0.005654439123349306,
+          0.005373415574391296,
+          0.005625220962385953,
+          0.005716821019705625
+        ],
+        "annualised_return": 0.18791459184762416,
+        "annualised_vol": 0.18484282404517197,
+        "sharpe_ratio": 1.0571920807546176,
+        "max_drawdown": 0.16534413042879037,
+        "cumulative_return": 1.3655170642357124,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.7430708179888977,
+            0.49009074981078266,
+            0.5476593537269773,
+            1.2174452223901304,
+            1.696449174385163
+          ],
+          "mean": 0.9389430636603902,
+          "std": 0.5109589607136498
+        },
+        "sharpe_5y": 1.0571920807546176,
+        "time_average_contribution": 0.0004885155631561976,
+        "cumulative_contribution": 0.004893786054177118
+      },
+      "MEX": {
+        "country_code": "MEX",
+        "country_id": 13,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.15374086498893913,
+          0.020569757925549645,
+          0.022577614479770976,
+          0.22141078333143718,
+          0.10882784814290111,
+          0.00961163097647173,
+          -0.11118978406951403,
+          -0.1362978805527843,
+          0.1799130819775026,
+          0.0
+        ],
+        "weights": [
+          0.013086605724589497,
+          0.01426411577500237,
+          0.013428634403525977,
+          0.014744643327452499,
+          0.016795797079137614,
+          0.019165592314001032,
+          0.020485913838207134,
+          0.016305751370210408,
+          0.013485879692844581,
+          0.015064537938620033
+        ],
+        "annualised_return": 0.08320361847579649,
+        "annualised_vol": 0.15926409225693167,
+        "sharpe_ratio": 0.5891647144711046,
+        "max_drawdown": 0.23233273271450192,
+        "cumulative_return": 0.49125018511591456,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.5999670158135573,
+            0.6305374163739281,
+            0.22094887531659216,
+            0.46990493661198585,
+            0.10736606662460679
+          ],
+          "mean": 0.6057448621481341,
+          "std": 0.5924513107131589
+        },
+        "sharpe_5y": 0.5891647144711046,
+        "time_average_contribution": 0.0005811250596743188,
+        "cumulative_contribution": 0.005810945864872297
+      },
+      "MYS": {
+        "country_code": "MYS",
+        "country_id": 14,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.05454753114597584,
+          -0.034299819559538154,
+          -0.14205947229110877,
+          0.17032975343136977,
+          -0.08972293115607634,
+          -0.002008857054068698,
+          0.1510873716673256,
+          -0.10393542606746889,
+          -0.0808626527317179,
+          0.0
+        ],
+        "weights": [
+          0.01754918863483884,
+          0.015271952392234518,
+          0.01500667982968844,
+          0.014755354455559156,
+          0.015760468858200358,
+          0.014648015704738988,
+          0.015594829695558551,
+          0.016731631387054552,
+          0.01618939120939509,
+          0.014996996950951752
+        ],
+        "annualised_return": -0.025099169653815867,
+        "annualised_vol": 0.14211000428905443,
+        "sharpe_ratio": -0.10826050284094235,
+        "max_drawdown": 0.17639358453456977,
+        "cumulative_return": -0.1193523075731504,
+        "rolling_sharpe_3y": {
+          "series": [
+            -0.10094474677975919,
+            0.1083263526211326,
+            -0.031243512143994845,
+            0.09345466939367567,
+            -0.3391564053992571
+          ],
+          "mean": -0.05391272846164058,
+          "std": 0.18174744064886658
+        },
+        "sharpe_5y": -0.10826050284094235,
+        "time_average_contribution": -0.0001320571187016796,
+        "cumulative_contribution": -0.0013318513181964642
+      },
+      "PER": {
+        "country_code": "PER",
+        "country_id": 15,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.13440144569737028,
+          0.41275894250923384,
+          -0.02874142662082311,
+          0.1272313564164393,
+          0.1153615093341494,
+          0.0033337728657738784,
+          0.08953244580317953,
+          0.010202282718667327,
+          0.08932541759602448,
+          0.0
+        ],
+        "weights": [
+          0.0037736980547204636,
+          0.002430025258679827,
+          0.0033449802375387426,
+          0.002769445277685471,
+          0.003059112216072166,
+          0.0033204267803311665,
+          0.0037348006364799277,
+          0.0036724246560467582,
+          0.003405815850471527,
+          0.0035160318874647403
+        ],
+        "annualised_return": 0.12429414700803676,
+        "annualised_vol": 0.19390618428493525,
+        "sharpe_ratio": 0.7061176078007759,
+        "max_drawdown": 0.028741426620823116,
+        "cumulative_return": 0.7963863601212071,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.6784313196424754,
+            1.1870958286413338,
+            1.2417147879654862,
+            2.1171713733991,
+            1.5217712437928403
+          ],
+          "mean": 1.3492369106882471,
+          "std": 0.5261469170914319
+        },
+        "sharpe_5y": 0.7061176078007759,
+        "time_average_contribution": 0.0001792097181464848,
+        "cumulative_contribution": 0.0017928391847819025
+      },
+      "PHL": {
+        "country_code": "PHL",
+        "country_id": 16,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.04260616584016967,
+          -0.025609639675995756,
+          -0.16342668794048,
+          0.03903347402151178,
+          -0.06526680969913268,
+          -0.09104211242651321,
+          0.0017778467868794006,
+          -0.016527424067973882,
+          0.04958998402675351,
+          0.0
+        ],
+        "weights": [
+          0.01023747544953862,
+          0.00919353198684973,
+          0.010355218874794323,
+          0.009074698279299047,
+          0.009497142187063521,
+          0.009168505047353942,
+          0.009401749519325379,
+          0.008780378951063018,
+          0.008443219290947955,
+          0.00740477656082613
+        ],
+        "annualised_return": -0.06556652881891611,
+        "annualised_vol": 0.08499702269425878,
+        "sharpe_ratio": -0.7390318504328863,
+        "max_drawdown": 0.29102384635988476,
+        "cumulative_return": -0.28757043833088725,
+        "rolling_sharpe_3y": {
+          "series": [
+            -1.3294403028707367,
+            -1.090773267162964,
+            -1.0477008256598384,
+            -0.38014427065931516,
+            -0.6192666611286771
+          ],
+          "mean": -0.8934650654963061,
+          "std": 0.38453758175621733
+        },
+        "sharpe_5y": -0.7390318504328863,
+        "time_average_contribution": -0.0003173996047957172,
+        "cumulative_contribution": -0.0031712153317051683
+      },
+      "POL": {
+        "country_code": "POL",
+        "country_id": 17,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.18717312344846307,
+          -0.1076334938084267,
+          -0.19481033147365945,
+          0.13907680969285457,
+          0.22685396310084824,
+          -0.036856730840763303,
+          0.0069700808015940655,
+          -0.07021699817646311,
+          0.21834060868186714,
+          0.0
+        ],
+        "weights": [
+          0.007190966023958802,
+          0.007683452977903231,
+          0.006886812079686471,
+          0.00540050164416677,
+          0.006108822728457382,
+          0.007496323295237149,
+          0.008243009603044058,
+          0.008243691800894902,
+          0.007891324435695674,
+          0.00979940242735564
+        ],
+        "annualised_return": 0.055435833267437395,
+        "annualised_vol": 0.1978769510762984,
+        "sharpe_ratio": 0.3728549782274272,
+        "max_drawdown": 0.28147570867559857,
+        "cumulative_return": 0.30966184278629494,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.3196639624026716,
+            0.05564001476951198,
+            0.1213016219690297,
+            0.9546184202339713,
+            0.6808839458768846
+          ],
+          "mean": 0.42642159305041377,
+          "std": 0.38266086306920033
+        },
+        "sharpe_5y": 0.3728549782274272,
+        "time_average_contribution": 0.00022395454854327174,
+        "cumulative_contribution": 0.0022369644976332204
+      },
+      "QAT": {
+        "country_code": "QAT",
+        "country_id": 18,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.08919552591214891,
+          0.08943427372849339,
+          0.042989172425138576,
+          -0.1665203600968148,
+          0.08068966735375886,
+          -0.11409924469116181,
+          0.022338972300749577,
+          0.013152031954065092,
+          0.07790390999801049,
+          0.0
+        ],
+        "weights": [
+          0.006825786358579767,
+          0.0064965893169675725,
+          0.007315863629640846,
+          0.007985244791874702,
+          0.006614674114890574,
+          0.00675885169771521,
+          0.006537570267756718,
+          0.00614186809872097,
+          0.006381496844449718,
+          0.0062898908746444725
+        ],
+        "annualised_return": 0.019725938810357224,
+        "annualised_vol": 0.11830228060840205,
+        "sharpe_ratio": 0.22837082800041025,
+        "max_drawdown": 0.20204010132531816,
+        "cumulative_return": 0.10259833682688191,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.04912260920632763,
+            -0.10897441267273197,
+            -0.32233884047902694,
+            -0.21752743084650947,
+            0.290879565864892
+          ],
+          "mean": -0.061767701785409745,
+          "std": 0.24033499616324216
+        },
+        "sharpe_5y": 0.22837082800041025,
+        "time_average_contribution": 6.61164618837427e-05,
+        "cumulative_contribution": 0.0006595163692590944
+      },
+      "SAU": {
+        "country_code": "SAU",
+        "country_id": 19,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.3155216302987275,
+          -0.0597433592547051,
+          -0.16115272900735422,
+          -0.08606256040514591,
+          0.20292985456609916,
+          -0.0032543778646100625,
+          0.07127143559691737,
+          0.06422934836045069,
+          -0.1763622490108445,
+          0.0
+        ],
+        "weights": [
+          0.10697249374795546,
+          0.10539916659593804,
+          0.11191319527051763,
+          0.12459408463244737,
+          0.10500550661154845,
+          0.11257829582636031,
+          0.11543634517967197,
+          0.10307209412280634,
+          0.10221080829010937,
+          0.08249486838364242
+        ],
+        "annualised_return": 0.013182970530975169,
+        "annualised_vol": 0.20746007576977393,
+        "sharpe_ratio": 0.16135826872566977,
+        "max_drawdown": 0.2791485539263552,
+        "cumulative_return": 0.0676758219676592,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.2911950051605374,
+            -0.07216759292484748,
+            0.17682579403056423,
+            0.14157267664569398,
+            0.3297989669056117
+          ],
+          "mean": 0.17344496996351197,
+          "std": 0.15784838235627296
+        },
+        "sharpe_5y": 0.16135826872566977,
+        "time_average_contribution": 0.0016461051913566702,
+        "cumulative_contribution": 0.015334047861342626
+      },
+      "THA": {
+        "country_code": "THA",
+        "country_id": 20,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.2772849503950906,
+          0.1731503543804236,
+          -0.15056950481969983,
+          0.15896877408693622,
+          -0.1972904269116925,
+          -0.13543044214929592,
+          -0.138795042729964,
+          -0.0629439694755217,
+          -0.05634537903935115,
+          0.0
+        ],
+        "weights": [
+          0.02219590958323325,
+          0.020118676724666693,
+          0.021687816679055498,
+          0.02022598719248145,
+          0.02410086556477162,
+          0.02153927114740074,
+          0.019346618999737997,
+          0.017537463906994573,
+          0.01811265493692544,
+          0.01602014016718591
+        ],
+        "annualised_return": -0.04856983245360402,
+        "annualised_vol": 0.2175933527391589,
+        "sharpe_ratio": -0.12130029212912148,
+        "max_drawdown": 0.4797128290241518,
+        "cumulative_return": -0.2203770974844349,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.15910654419779516,
+            -0.44672805354702305,
+            -1.0586421533637758,
+            -0.8935353064218479,
+            -2.1364554311067123
+          ],
+          "mean": -0.8752508800483128,
+          "std": 0.8482527177840624
+        },
+        "sharpe_5y": -0.12130029212912148,
+        "time_average_contribution": -0.0002893675619697092,
+        "cumulative_contribution": -0.00294509327052761
+      },
+      "TUR": {
+        "country_code": "TUR",
+        "country_id": 21,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.2350229599305872,
+          -0.20957120858636702,
+          -0.0007414879985288198,
+          0.7243210526355606,
+          0.02598140703469449,
+          0.2868564653833444,
+          0.0705450738373016,
+          -0.11823266790344134,
+          0.13190476508922822,
+          0.0
+        ],
+        "weights": [
+          0.010211825537965513,
+          0.007307277704585813,
+          0.006115031965462673,
+          0.006450946077303669,
+          0.01115472626993362,
+          0.011682669083144944,
+          0.01594684240468734,
+          0.01592070427259334,
+          0.01381618347330302,
+          0.013760205419992792
+        ],
+        "annualised_return": 0.0800630723975051,
+        "annualised_vol": 0.3734730127239347,
+        "sharpe_ratio": 0.36202907119338407,
+        "max_drawdown": 0.21015730204889188,
+        "cumulative_return": 0.4697571734183059,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.4243414952754875,
+            0.7169171318158222,
+            0.838363472811907,
+            0.9823303744479197,
+            0.7515427963064134
+          ],
+          "mean": 0.7426990541315099,
+          "std": 0.20534684393286778
+        },
+        "sharpe_5y": 0.36202907119338407,
+        "time_average_contribution": 0.0005442722258490889,
+        "cumulative_contribution": 0.005432775955616087
+      },
+      "TWN": {
+        "country_code": "TWN",
+        "country_id": 22,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.2727493166488363,
+          0.03253124387722003,
+          -0.10409897456863901,
+          0.030556120314946655,
+          0.15131295027253264,
+          0.0479897176375498,
+          0.09943359694875874,
+          -0.060873232642389384,
+          0.032769521624609235,
+          0.0
+        ],
+        "weights": [
+          0.07506664348312078,
+          0.08050735249955623,
+          0.08122198294050324,
+          0.06842274561834451,
+          0.0688998007867481,
+          0.07347687923261077,
+          0.08227984482122641,
+          0.09126137454449536,
+          0.09456254546025303,
+          0.09514163214297748
+        ],
+        "annualised_return": 0.0931630924005209,
+        "annualised_vol": 0.14272225534374453,
+        "sharpe_ratio": 0.7039830738429314,
+        "max_drawdown": 0.104098974568639,
+        "cumulative_return": 0.5610787164028528,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.8719723573608841,
+            0.7751979854504187,
+            0.442040620244111,
+            1.0851346909383761,
+            0.9395254961714975
+          ],
+          "mean": 0.8227742300330576,
+          "std": 0.24088685414290148
+        },
+        "sharpe_5y": 0.7039830738429314,
+        "time_average_contribution": 0.0036405330780951393,
+        "cumulative_contribution": 0.036700689943261144
+      },
+      "ZAF": {
+        "country_code": "ZAF",
+        "country_id": 23,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.2994244598184065,
+          0.1419801652833864,
+          -0.09164152179361554,
+          -0.01602533025253254,
+          -0.07348585274848674,
+          -0.011459601593738829,
+          0.15838492225610437,
+          0.024941518218677555,
+          0.10315082684659166,
+          0.0
+        ],
+        "weights": [
+          0.016806044870497666,
+          0.017305722437797936,
+          0.016844465889396514,
+          0.015238324581156955,
+          0.015594932781343822,
+          0.014814087201223616,
+          0.012310660925694564,
+          0.012961648102041635,
+          0.01288034079517928,
+          0.01364376674044531
+        ],
+        "annualised_return": 0.09732892976011298,
+        "annualised_vol": 0.1622938386110383,
+        "sharpe_ratio": 0.659630199908756,
+        "max_drawdown": 0.18136997368718635,
+        "cumulative_return": 0.5910511617402714,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.4260175340890038,
+            0.2594483319766294,
+            -0.026846297562333223,
+            0.5613618487693336,
+            0.6209632482993632
+          ],
+          "mean": 0.3681889331143994,
+          "std": 0.26097515622284756
+        },
+        "sharpe_5y": 0.659630199908756,
+        "time_average_contribution": 0.000798731215500023,
+        "cumulative_contribution": 0.00799877363471424
+      },
+      "CZE": {
+        "country_code": "CZE",
+        "country_id": 5,
+        "rebalance_indices": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.02745171221814513,
+          -0.011831781603810518,
+          0.2490309961403151,
+          0.0
+        ],
+        "weights": [
+          0.0013088835962772217,
+          0.0012557785754091166,
+          0.0013815673599817924,
+          0.0016636679902083745
+        ],
+        "annualised_return": 0.09561415804766371,
+        "annualised_vol": 0.16110791556603948,
+        "sharpe_ratio": 0.6509534357186261,
+        "max_drawdown": 0.011831781603810449,
+        "cumulative_return": 0.20037038331449097,
+        "rolling_sharpe_3y": {
+          "series": [],
+          "mean": null,
+          "std": null
+        },
+        "sharpe_5y": null,
+        "time_average_contribution": 7.331597555804324e-05,
+        "cumulative_contribution": 0.00029324696210419887
+      }
+    },
+    "country_composite_long_short": {
+      "ARE": {
+        "country_code": "ARE",
+        "country_id": 0,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.08167105368403049,
+          -0.10837938791742166,
+          0.08129570294771896,
+          0.04437513075931551,
+          -0.11008842394877602,
+          0.01851730466922335,
+          0.07103455051531865,
+          0.0020068957196587023,
+          0.055939416410212814,
+          0.0
+        ],
+        "weights": [
+          0.010352905197294229,
+          0.01674385331264082,
+          0.01974634346536538,
+          0.025560463635171764,
+          0.031068545497200603,
+          0.032411631370442895,
+          0.03541405479019088,
+          0.03602079920575379,
+          0.03888545451269022,
+          0.03655321293788375
+        ],
+        "annualised_return": -0.010258987678302578,
+        "annualised_vol": 0.0975327267013603,
+        "sharpe_ratio": -0.05530423569795272,
+        "max_drawdown": 0.110088423948776,
+        "cumulative_return": -0.05025321209797606,
+        "rolling_sharpe_3y": {
+          "series": [
+            -0.4785252342484783,
+            -0.009632701850856726,
+            0.3978253824536473,
+            0.3220586144913614,
+            0.1511893312943413
+          ],
+          "mean": 0.07658307842800299,
+          "std": 0.3480658519733286
+        },
+        "sharpe_5y": -0.05530423569795272,
+        "time_average_contribution": 0.00020223504679084,
+        "cumulative_contribution": 0.002008862982789017
+      },
+      "BRA": {
+        "country_code": "BRA",
+        "country_id": 1,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.03337720345632725,
+          0.15422587007528277,
+          0.23764443915238237,
+          0.13382367897887557,
+          0.005775891963189117,
+          0.17548666637802718,
+          0.08327619827453889,
+          0.11502310112329739,
+          0.11034167901703204,
+          0.0
+        ],
+        "weights": [
+          0.0246605497549381,
+          0.025799983893852983,
+          0.02042911448818999,
+          0.01952703236735043,
+          0.020907245870578184,
+          0.022359545661958802,
+          0.022068077249995488,
+          0.01802026747902025,
+          0.01599752753301404,
+          0.014862730954442946
+        ],
+        "annualised_return": 0.21556432891296362,
+        "annualised_vol": 0.10238942451659239,
+        "sharpe_ratio": 2.048990378393941,
+        "max_drawdown": 0.0,
+        "cumulative_return": 1.653931660640569,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.170985483228461,
+            2.5562566439515204,
+            2.448151594096518,
+            2.8258881116460084,
+            1.8582347633582437
+          ],
+          "mean": 2.3719033192561505,
+          "std": 0.3708522285277256
+        },
+        "sharpe_5y": 2.048990378393941,
+        "time_average_contribution": 0.002199041671290871,
+        "cumulative_contribution": 0.022196715607644357
+      },
+      "CHL": {
+        "country_code": "CHL",
+        "country_id": 2,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.10228520881981921,
+          0.010839689312321588,
+          0.015278465644301326,
+          0.03749592741054106,
+          -0.05096043932628666,
+          0.07011760124378132,
+          0.05126173664131334,
+          0.055585152336163485,
+          0.044444844064493144,
+          0.0
+        ],
+        "weights": [
+          0.006934880491986736,
+          0.006142856705246474,
+          0.005503410904450152,
+          0.005200023012841449,
+          0.0059044345378572284,
+          0.006503639367376029,
+          0.006114089212491669,
+          0.005920415678570309,
+          0.006047331055927907,
+          0.006202143702605594
+        ],
+        "annualised_return": 0.06676967377659904,
+        "annualised_vol": 0.05676687768103304,
+        "sharpe_ratio": 1.1850156284316073,
+        "max_drawdown": 0.0509604393262866,
+        "cumulative_return": 0.3815076850597219,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.9021799707815619,
+            0.8200867882105041,
+            1.05658472736011,
+            1.2379400817538107,
+            0.9666454843228102
+          ],
+          "mean": 0.9966874104857594,
+          "std": 0.16032193645735665
+        },
+        "sharpe_5y": 1.1850156284316073,
+        "time_average_contribution": 0.00021213914552496905,
+        "cumulative_contribution": 0.002123077203239676
+      },
+      "CHN": {
+        "country_code": "CHN",
+        "country_id": 3,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.07717804586962812,
+          0.027777211076611623,
+          0.002456503716279118,
+          0.01707308102003367,
+          0.028381576750112714,
+          0.039348385525892315,
+          0.0698002286933141,
+          -0.08439868427184935,
+          -0.08900566384584391,
+          0.0
+        ],
+        "weights": [
+          0.4518490275162102,
+          0.43428785299620165,
+          0.4310619472513281,
+          0.4273428437275454,
+          0.42808038662126674,
+          0.38925225259471025,
+          0.3290096134588951,
+          0.31687904758816515,
+          0.3572844912795968,
+          0.372677105562606
+        ],
+        "annualised_return": -0.016045625475275216,
+        "annualised_vol": 0.0759793790972683,
+        "sharpe_ratio": -0.1730611857749219,
+        "max_drawdown": 0.16589238719636157,
+        "cumulative_return": -0.07769448744121166,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.2286234439551402,
+            2.092520462266198,
+            0.35754266220943304,
+            -0.07235958070139785,
+            -0.13946089137525167
+          ],
+          "mean": 0.4933732192708244,
+          "std": 0.9173803601972628
+        },
+        "sharpe_5y": -0.1730611857749219,
+        "time_average_contribution": -0.002256808304761277,
+        "cumulative_contribution": -0.02431909100945684
+      },
+      "COL": {
+        "country_code": "COL",
+        "country_id": 4,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.09484045852897222,
+          -0.035187660001219256,
+          0.21859237296967884,
+          0.007929613900273122,
+          -0.007961602073227408,
+          -0.06724723415392775,
+          0.05783330603094493,
+          0.0377608187350908,
+          0.04460940570557391,
+          0.0
+        ],
+        "weights": [
+          0.003420843571285455,
+          0.002970959839374518,
+          0.0031958209030076784,
+          0.002648922550390585,
+          0.002388544979596632,
+          0.0026089176579130813,
+          0.0028266645211509336,
+          0.0026017232030112933,
+          0.0027298251185602445,
+          0.0028019773284579446
+        ],
+        "annualised_return": 0.0660293524511466,
+        "annualised_vol": 0.10685741466889287,
+        "sharpe_ratio": 0.6572674076577447,
+        "max_drawdown": 0.07467344050829632,
+        "cumulative_return": 0.3767206112780781,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.5182037538903164,
+            0.44056299212039196,
+            0.6572558168907353,
+            0.4104384960362787,
+            0.36375058281765726
+          ],
+          "mean": 0.47804232835107596,
+          "std": 0.11485642827124891
+        },
+        "sharpe_5y": 0.6572674076577447,
+        "time_average_contribution": 0.00011285155434961812,
+        "cumulative_contribution": 0.0011288087984540063
+      },
+      "EGY": {
+        "country_code": "EGY",
+        "country_id": 6,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.12779629386729688,
+          0.2560416530687535,
+          0.06955157549612898,
+          0.10876272879201007,
+          0.10528793882252449,
+          0.13195931396443572,
+          0.007994259324649644,
+          0.022801166317877347,
+          -0.0170768208224919,
+          0.0
+        ],
+        "weights": [
+          0.0017067488981468567,
+          0.0015973562904911137,
+          0.0015987310452214962,
+          0.0012199235081268485,
+          0.0012166505127531335,
+          0.0013416540630491098,
+          0.0024829160649710467,
+          0.0014772518213958241,
+          0.001555833856829622,
+          0.001552937280666161
+        ],
+        "annualised_return": 0.16324188288069297,
+        "annualised_vol": 0.11118821659710454,
+        "sharpe_ratio": 1.4625976271884178,
+        "max_drawdown": 0.01707682082249175,
+        "cumulative_return": 1.1298555675491193,
+        "rolling_sharpe_3y": {
+          "series": [
+            3.219707826061659,
+            2.1338303787986863,
+            2.3009676510457266,
+            1.4821307019882202,
+            1.0546016660717925
+          ],
+          "mean": 2.038247644793217,
+          "std": 0.829281539372749
+        },
+        "sharpe_5y": 1.4625976271884178,
+        "time_average_contribution": 0.00012030882194213115,
+        "cumulative_contribution": 0.0012036646709285836
+      },
+      "GRC": {
+        "country_code": "GRC",
+        "country_id": 7,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.006101171228379498,
+          -0.005722955500520072,
+          0.015539360975383165,
+          -0.048784223575997765,
+          -0.0071646728579979335,
+          0.07549758636583598,
+          0.08354456230135962,
+          0.10915081384826689,
+          0.027743795644741498,
+          0.0
+        ],
+        "weights": [
+          0.002021459445550365,
+          0.0022443221919724514,
+          0.0023094882214073392,
+          0.00205878125328199,
+          0.0025250848767985135,
+          0.003205280975188596,
+          0.0034611207490243467,
+          0.0035289926605060517,
+          0.003502054834355298,
+          0.004300786407291903
+        ],
+        "annualised_return": 0.04714508920474092,
+        "annualised_vol": 0.06658342009187959,
+        "sharpe_ratio": 0.7320233644844373,
+        "max_drawdown": 0.055599373431442285,
+        "cumulative_return": 0.2590248491405327,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.1469662494217589,
+            0.5661014393770649,
+            0.9638014243697184,
+            1.0271830000635616,
+            1.5535952805710702
+          ],
+          "mean": 0.8515294787606347,
+          "std": 0.5277864267844216
+        },
+        "sharpe_5y": 0.7320233644844373,
+        "time_average_contribution": 9.056846027840012e-05,
+        "cumulative_contribution": 0.0009059387469587676
+      },
+      "HUN": {
+        "country_code": "HUN",
+        "country_id": 8,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.11778249607060842,
+          0.07351008938881293,
+          0.23587550269439816,
+          -0.02368649709656309,
+          0.259065813764123,
+          -0.05156333232430113,
+          0.1537111066770978,
+          0.011436657654720659,
+          0.13310672620880454,
+          0.0
+        ],
+        "weights": [
+          0.0011509553605859896,
+          0.0011696430797136274,
+          0.0012196653754398266,
+          0.0007468015788614344,
+          0.0008807800853300209,
+          0.0009605997577209344,
+          0.001514039066209102,
+          0.0015046444898174785,
+          0.0016038801980689968,
+          0.0017973564032785685
+        ],
+        "annualised_return": 0.1798265383872426,
+        "annualised_vol": 0.14425841480136745,
+        "sharpe_ratio": 1.2605691866081459,
+        "max_drawdown": 0.051563332324301145,
+        "cumulative_return": 1.2860767335129606,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.224185663834715,
+            1.2791706285913274,
+            1.108868369408495,
+            1.0295700053395316,
+            1.1147149847317506
+          ],
+          "mean": 1.151301930381164,
+          "std": 0.09952426318140474
+        },
+        "sharpe_5y": 1.2605691866081459,
+        "time_average_contribution": 0.00011336112844526373,
+        "cumulative_contribution": 0.001134122235093793
+      },
+      "IDN": {
+        "country_code": "IDN",
+        "country_id": 9,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.05440828004684323,
+          -0.002741792565280704,
+          0.17922109815097553,
+          0.11103759441802685,
+          0.13426404551084156,
+          0.05124397282682919,
+          0.09851514205489954,
+          -0.26276278096714917,
+          -0.11180494218399306,
+          0.0
+        ],
+        "weights": [
+          0.019815259718294446,
+          0.01833742734583191,
+          0.02118922683071758,
+          0.023968422505817315,
+          0.0242232207470825,
+          0.025356740480163363,
+          0.029205978083157853,
+          0.02877022845344889,
+          0.027745924759238524,
+          0.026953847398901675
+        ],
+        "annualised_return": 0.011660800480173927,
+        "annualised_vol": 0.17736263008914457,
+        "sharpe_ratio": 0.16075997195875152,
+        "max_drawdown": 0.34518954561700477,
+        "cumulative_return": 0.05967969342793533,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.2259849457693448,
+            2.311896824907013,
+            0.503345611547808,
+            0.03357772380309004,
+            -0.15723505814521443
+          ],
+          "mean": 0.7835140095764083,
+          "std": 1.007179493929192
+        },
+        "sharpe_5y": 0.16075997195875152,
+        "time_average_contribution": 0.00020976029183210538,
+        "cumulative_contribution": 0.00204458625993853
+      },
+      "IND": {
+        "country_code": "IND",
+        "country_id": 10,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.16519524821830234,
+          0.0002877353539510463,
+          0.09655386296950084,
+          0.09926681099506283,
+          0.10028249842452816,
+          -0.005960018195282413,
+          0.03688087580821778,
+          0.036340119593217216,
+          0.04981109704332745,
+          0.0
+        ],
+        "weights": [
+          0.10472682784516953,
+          0.11989340436963453,
+          0.1311792236688354,
+          0.1330404796705511,
+          0.12876594752341697,
+          0.14503103477325893,
+          0.1842676144058774,
+          0.20951651706688904,
+          0.18253348373497824,
+          0.17603160509805127
+        ],
+        "annualised_return": 0.11630128658414796,
+        "annualised_vol": 0.07514734365787597,
+        "sharpe_ratio": 1.540063033619094,
+        "max_drawdown": 0.005960018195282402,
+        "cumulative_return": 0.733433264591224,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.7751770025334073,
+            1.6720419801796302,
+            2.103796655557706,
+            1.994554983794856,
+            1.4607424442934067
+          ],
+          "mean": 1.8012626132718013,
+          "std": 0.25603769440732854
+        },
+        "sharpe_5y": 1.540063033619094,
+        "time_average_contribution": 0.007875781951370132,
+        "cumulative_contribution": 0.08141236990575762
+      },
+      "KOR": {
+        "country_code": "KOR",
+        "country_id": 11,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.04713240723116746,
+          0.036838174476501756,
+          0.022004087231950215,
+          0.07812630600835062,
+          0.01594166914822092,
+          0.08999840277456655,
+          0.060615355757183485,
+          0.04793157844329893,
+          0.08234001503858837,
+          0.0
+        ],
+        "weights": [
+          0.07920577945186606,
+          0.08031318156396285,
+          0.0635485512513723,
+          0.06358441272927157,
+          0.06596963776303538,
+          0.07099092188942394,
+          0.06735432378701958,
+          0.06850188699069963,
+          0.057727744514797626,
+          0.07075355842179348
+        ],
+        "annualised_return": 0.09768267225859817,
+        "annualised_vol": 0.040354988962361144,
+        "sharpe_ratio": 2.383487189444591,
+        "max_drawdown": 0.0,
+        "cumulative_return": 0.5936173266590101,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.49637879528503,
+            2.5785733112144222,
+            2.733410559528077,
+            3.522231440755643,
+            2.138657831574905
+          ],
+          "mean": 2.6938503876716156,
+          "std": 0.5119332927265342
+        },
+        "sharpe_5y": 2.383487189444591,
+        "time_average_contribution": 0.003261784213887532,
+        "cumulative_contribution": 0.03308288163444861
+      },
+      "KWT": {
+        "country_code": "KWT",
+        "country_id": 12,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.044753971465526954,
+          0.018406307967801266,
+          0.05548385231566831,
+          0.0525305418020969,
+          0.006119723709981442,
+          0.01245534017991115,
+          0.015019754102657726,
+          -0.09429985910273964,
+          -0.05691143772666074,
+          0.0
+        ],
+        "weights": [
+          0.004238125279673354,
+          0.004521294740895097,
+          0.00489779479485439,
+          0.005439917583018563,
+          0.0054776717869168615,
+          0.0053288640786762044,
+          0.005654439123349306,
+          0.005373415574391296,
+          0.005625220962385953,
+          0.005716821019705625
+        ],
+        "annualised_return": -0.009277757129598996,
+        "annualised_vol": 0.06418713591766895,
+        "sharpe_ratio": -0.11201543020371643,
+        "max_drawdown": 0.1458445562704419,
+        "cumulative_return": -0.04553596689146788,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.7071843133199346,
+            1.914990495835326,
+            0.22470609615020284,
+            -0.3109608749838563,
+            -0.6709248055324056
+          ],
+          "mean": 0.37299904495784036,
+          "std": 1.0085864371168933
+        },
+        "sharpe_5y": -0.11201543020371643,
+        "time_average_contribution": -1.9097105941648006e-05,
+        "cumulative_contribution": -0.00019123801124021345
+      },
+      "MEX": {
+        "country_code": "MEX",
+        "country_id": 13,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.018586528586826523,
+          0.06865788631158071,
+          0.10478286862708863,
+          0.0334581038416647,
+          0.04823322918290002,
+          0.10278433673003878,
+          0.08726506050681325,
+          0.04494438336973616,
+          -0.01701296010373765,
+          0.0
+        ],
+        "weights": [
+          0.013086605724589497,
+          0.01426411577500237,
+          0.013428634403525977,
+          0.014744643327452499,
+          0.016795797079137614,
+          0.019165592314001032,
+          0.020485913838207134,
+          0.016305751370210408,
+          0.013485879692844581,
+          0.015064537938620033
+        ],
+        "annualised_return": 0.09103098761064277,
+        "annualised_vol": 0.06215227933897349,
+        "sharpe_ratio": 1.4626217564775317,
+        "max_drawdown": 0.017012960103737713,
+        "cumulative_return": 0.5459143490052063,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.880078781920358,
+            3.9251024010113893,
+            3.4346593558458114,
+            1.8270072218860793,
+            1.4651910685279337
+          ],
+          "mean": 2.5064077658383144,
+          "std": 1.0968535440290719
+        },
+        "sharpe_5y": 1.4626217564775317,
+        "time_average_contribution": 0.0007707688051939933,
+        "cumulative_contribution": 0.00773164807672444
+      },
+      "MYS": {
+        "country_code": "MYS",
+        "country_id": 14,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.07712757599405223,
+          0.09958322196824475,
+          0.11399975458356552,
+          -0.020923936755820105,
+          0.04408354790701591,
+          0.04969324418864343,
+          0.024217589110274634,
+          0.0681473511538362,
+          0.0675030831025353,
+          0.0
+        ],
+        "weights": [
+          0.01754918863483884,
+          0.015271952392234518,
+          0.01500667982968844,
+          0.014755354455559156,
+          0.015760468858200358,
+          0.014648015704738988,
+          0.015594829695558551,
+          0.016731631387054552,
+          0.01618939120939509,
+          0.014996996950951752
+        ],
+        "annualised_return": 0.10580205701063972,
+        "annualised_vol": 0.05674713554443087,
+        "sharpe_ratio": 1.8447853842508783,
+        "max_drawdown": 0.020923936755820056,
+        "cumulative_return": 0.6534343940043759,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.9420283740695958,
+            1.619464330235653,
+            1.6053870363536318,
+            1.7936706768381805,
+            2.4833571573110715
+          ],
+          "mean": 1.8887815149616265,
+          "std": 0.3599464093802315
+        },
+        "sharpe_5y": 1.8447853842508783,
+        "time_average_contribution": 0.0008309778482043981,
+        "cumulative_contribution": 0.008338952017644896
+      },
+      "PER": {
+        "country_code": "PER",
+        "country_id": 15,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.13714005270382323,
+          0.2493847894352298,
+          0.0790874550665098,
+          0.10743754569243827,
+          0.03670598560250746,
+          0.07582971444040618,
+          0.07019291087307737,
+          0.0943911593072605,
+          0.001487353722632423,
+          0.0
+        ],
+        "weights": [
+          0.0037736980547204636,
+          0.002430025258679827,
+          0.0033449802375387426,
+          0.002769445277685471,
+          0.003059112216072166,
+          0.0033204267803311665,
+          0.0037348006364799277,
+          0.0036724246560467582,
+          0.003405815850471527,
+          0.0035160318874647403
+        ],
+        "annualised_return": 0.17304065209447428,
+        "annualised_vol": 0.09716201212167884,
+        "sharpe_ratio": 1.7530657265049843,
+        "max_drawdown": 0.0,
+        "cumulative_return": 1.2210856945559718,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.3844165651784537,
+            2.1258160620555504,
+            4.967269200824068,
+            2.5498024442133205,
+            1.7984648027116081
+          ],
+          "mean": 2.7651538149966,
+          "std": 1.2633180169303795
+        },
+        "sharpe_5y": 1.7530657265049843,
+        "time_average_contribution": 0.0002663566210743745,
+        "cumulative_contribution": 0.0026665861460570817
+      },
+      "PHL": {
+        "country_code": "PHL",
+        "country_id": 16,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.06240182269566926,
+          0.12985253920596673,
+          0.028394034625510156,
+          0.023362174170783803,
+          0.07829474587788147,
+          0.1123555921639969,
+          0.02056579248763991,
+          0.0887227918820397,
+          0.06659388595429383,
+          0.0
+        ],
+        "weights": [
+          0.01023747544953862,
+          0.00919353198684973,
+          0.010355218874794323,
+          0.009074698279299047,
+          0.009497142187063521,
+          0.009168505047353942,
+          0.009401749519325379,
+          0.008780378951063018,
+          0.008443219290947955,
+          0.00740477656082613
+        ],
+        "annualised_return": 0.12421041701732571,
+        "annualised_vol": 0.05712204060693882,
+        "sharpe_ratio": 2.1376805610464023,
+        "max_drawdown": 0.0,
+        "cumulative_return": 0.7957175448826816,
+        "rolling_sharpe_3y": {
+          "series": [
+            2.592068908508905,
+            2.099263973124421,
+            2.3012232457799358,
+            2.7516026363167447,
+            2.2193054336873597
+          ],
+          "mean": 2.392692839483473,
+          "std": 0.270692370522651
+        },
+        "sharpe_5y": 2.1376805610464023,
+        "time_average_contribution": 0.0005647021820111627,
+        "cumulative_contribution": 0.005660715267165495
+      },
+      "POL": {
+        "country_code": "POL",
+        "country_id": 17,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.10871723307835754,
+          0.06986877614353602,
+          0.1344929408384681,
+          0.08714078872741797,
+          0.09450999250764597,
+          0.1461015418895681,
+          0.04451828703771901,
+          0.06480725032290274,
+          -0.017935550898647012,
+          0.0
+        ],
+        "weights": [
+          0.007190966023958802,
+          0.007683452977903231,
+          0.006886812079686471,
+          0.00540050164416677,
+          0.006108822728457382,
+          0.007496323295237149,
+          0.008243009603044058,
+          0.008243691800894902,
+          0.007891324435695674,
+          0.00979940242735564
+        ],
+        "annualised_return": 0.14921623548867213,
+        "annualised_vol": 0.07148355660297957,
+        "sharpe_ratio": 2.048642497501161,
+        "max_drawdown": 0.017935550898646856,
+        "cumulative_return": 1.0045124785252173,
+        "rolling_sharpe_3y": {
+          "series": [
+            5.6977097968981125,
+            3.868608496742616,
+            3.7624531069575293,
+            1.9696407553898916,
+            1.4126890716575484
+          ],
+          "mean": 3.34222024552914,
+          "std": 1.7036047284465283
+        },
+        "sharpe_5y": 2.048642497501161,
+        "time_average_contribution": 0.0005147696564651286,
+        "cumulative_contribution": 0.005158983756015756
+      },
+      "QAT": {
+        "country_code": "QAT",
+        "country_id": 18,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.08682622680493657,
+          -0.07808966900464764,
+          0.05466869618981014,
+          0.0830018561003519,
+          -0.0763324696281448,
+          0.10910991865735983,
+          -0.09322314443109708,
+          0.013813502138186565,
+          -0.07861138465426241,
+          0.0
+        ],
+        "weights": [
+          0.006825786358579767,
+          0.0064965893169675725,
+          0.007315863629640846,
+          0.007985244791874702,
+          0.006614674114890574,
+          0.00675885169771521,
+          0.006537570267756718,
+          0.00614186809872097,
+          0.006381496844449718,
+          0.0062898908746444725
+        ],
+        "annualised_return": -0.03555871097593877,
+        "annualised_vol": 0.10390593339619453,
+        "sharpe_ratio": -0.2935134047753327,
+        "max_drawdown": 0.15296503224105454,
+        "cumulative_return": -0.16559101079117555,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.01572764644006047,
+            -0.002424869353346255,
+            0.2805114908369987,
+            -0.12289026465431528,
+            -0.41624271668654855
+          ],
+          "mean": -0.04906374268343018,
+          "std": 0.2526181394201516
+        },
+        "sharpe_5y": -0.2935134047753327,
+        "time_average_contribution": -8.309620229515135e-05,
+        "cumulative_contribution": -0.0008319342632887583
+      },
+      "SAU": {
+        "country_code": "SAU",
+        "country_id": 19,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.024650396564130483,
+          0.0747904989365204,
+          0.16719463669186432,
+          0.03105731486606371,
+          0.005535725002252856,
+          0.049347076495762435,
+          0.07631808434335956,
+          -0.03263333417854752,
+          0.04946875987952504,
+          0.0
+        ],
+        "weights": [
+          0.10697249374795546,
+          0.10539916659593804,
+          0.11191319527051763,
+          0.12459408463244737,
+          0.10500550661154845,
+          0.11257829582636031,
+          0.11543634517967197,
+          0.10307209412280634,
+          0.10221080829010937,
+          0.08249486838364242
+        ],
+        "annualised_return": 0.07781849280674114,
+        "annualised_vol": 0.07900207610369463,
+        "sharpe_ratio": 1.0035897409894292,
+        "max_drawdown": 0.032633334178547496,
+        "cumulative_return": 0.45454832292868996,
+        "rolling_sharpe_3y": {
+          "series": [
+            1.1736770623328023,
+            1.8705947769635507,
+            1.1157493467181836,
+            1.200285837856604,
+            0.9467438298484069
+          ],
+          "mean": 1.2614101707439094,
+          "std": 0.35453178580551514
+        },
+        "sharpe_5y": 1.0035897409894292,
+        "time_average_contribution": 0.004446601355836581,
+        "cumulative_contribution": 0.04516913084396168
+      },
+      "THA": {
+        "country_code": "THA",
+        "country_id": 20,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.012632926194476868,
+          -0.12850641638955232,
+          0.03539064826404845,
+          0.03802482335860399,
+          0.12186676288929182,
+          0.06131109873404911,
+          0.112797058480032,
+          0.05243183234681248,
+          0.11382774486267272,
+          0.0
+        ],
+        "weights": [
+          0.02219590958323325,
+          0.020118676724666693,
+          0.021687816679055498,
+          0.02022598719248145,
+          0.02410086556477162,
+          0.02153927114740074,
+          0.019346618999737997,
+          0.017537463906994573,
+          0.01811265493692544,
+          0.01602014016718591
+        ],
+        "annualised_return": 0.07511112315330837,
+        "annualised_vol": 0.10084403729889421,
+        "sharpe_ratio": 0.7824173583653367,
+        "max_drawdown": 0.1285064163895523,
+        "cumulative_return": 0.436371487301225,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.3524881551752012,
+            0.6878876155429886,
+            2.885091265156212,
+            3.508822692866067,
+            2.496253912674822
+          ],
+          "mean": 1.986108728283058,
+          "std": 1.391147886022763
+        },
+        "sharpe_5y": 0.7824173583653367,
+        "time_average_contribution": 0.0008092033742176631,
+        "cumulative_contribution": 0.008110672660021079
+      },
+      "TUR": {
+        "country_code": "TUR",
+        "country_id": 21,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.04685345899264004,
+          0.037562284635534654,
+          0.07848930664100126,
+          -0.07809545557547926,
+          0.024944600763658103,
+          -0.0425661120525207,
+          0.09110059590059953,
+          0.04659214299587,
+          -0.07713535310636623,
+          0.0
+        ],
+        "weights": [
+          0.010211825537965513,
+          0.007307277704585813,
+          0.006115031965462673,
+          0.006450946077303669,
+          0.01115472626993362,
+          0.011682669083144944,
+          0.01594684240468734,
+          0.01592070427259334,
+          0.01381618347330302,
+          0.013760205419992792
+        ],
+        "annualised_return": 0.022346855531570453,
+        "annualised_vol": 0.08134847123200412,
+        "sharpe_ratio": 0.3140697477414421,
+        "max_drawdown": 0.0953196802449452,
+        "cumulative_return": 0.11684094582732074,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.29283671034005593,
+            0.4305035822148435,
+            0.46116543977841673,
+            -0.12903927953736374,
+            0.1820222157877714
+          ],
+          "mean": 0.24749773371674477,
+          "std": 0.2383630727471263
+        },
+        "sharpe_5y": 0.3140697477414421,
+        "time_average_contribution": 0.0001638907217624194,
+        "cumulative_contribution": 0.0016377928608786174
+      },
+      "TWN": {
+        "country_code": "TWN",
+        "country_id": 22,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.009553258322456182,
+          -0.030016425986029268,
+          -0.0035474732833276346,
+          0.010345554891299447,
+          0.06801806196970862,
+          0.005169870199759008,
+          -0.00970739209261405,
+          0.07120274173824614,
+          0.03991952032469058,
+          0.0
+        ],
+        "weights": [
+          0.07506664348312078,
+          0.08050735249955623,
+          0.08122198294050324,
+          0.06842274561834451,
+          0.0688998007867481,
+          0.07347687923261077,
+          0.08227984482122641,
+          0.09126137454449536,
+          0.09456254546025303,
+          0.09514163214297748
+        ],
+        "annualised_return": 0.03146532569073024,
+        "annualised_vol": 0.04457036483505526,
+        "sharpe_ratio": 0.7221736536363692,
+        "max_drawdown": 0.03345741680011047,
+        "cumulative_return": 0.16754375538403243,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.4777344437276024,
+            0.3135022035393704,
+            1.005410907932106,
+            1.400055919613899,
+            1.2670560310646908
+          ],
+          "mean": 0.8927519011755336,
+          "std": 0.4790414133395206
+        },
+        "sharpe_5y": 0.7221736536363692,
+        "time_average_contribution": 0.0013260852175822145,
+        "cumulative_contribution": 0.013305654622141727
+      },
+      "ZAF": {
+        "country_code": "ZAF",
+        "country_id": 23,
+        "rebalance_indices": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          -0.0686233382123469,
+          -0.0735345561467463,
+          0.08866902996693907,
+          0.07854073696858016,
+          0.024497995603409213,
+          0.0749622837193858,
+          0.04590287027497958,
+          0.015076607923078095,
+          -0.10314552993248326,
+          0.0
+        ],
+        "weights": [
+          0.016806044870497666,
+          0.017305722437797936,
+          0.016844465889396514,
+          0.015238324581156955,
+          0.015594932781343822,
+          0.014814087201223616,
+          0.012310660925694564,
+          0.012961648102041635,
+          0.01288034079517928,
+          0.01364376674044531
+        ],
+        "annualised_return": 0.01218686666093971,
+        "annualised_vol": 0.09237112474439908,
+        "sharpe_ratio": 0.17829402942241107,
+        "max_drawdown": 0.10314552993248319,
+        "cumulative_return": 0.06243774095428889,
+        "rolling_sharpe_3y": {
+          "series": [
+            0.4312825635563889,
+            1.0218248123445752,
+            2.7615553703628204,
+            0.5253293355874166,
+            0.24224793971957326
+          ],
+          "mean": 0.9964480043141549,
+          "std": 1.027914212002796
+        },
+        "sharpe_5y": 0.17829402942241107,
+        "time_average_contribution": 0.00011890613575199106,
+        "cumulative_contribution": 0.001184705594341029
+      },
+      "CZE": {
+        "country_code": "CZE",
+        "country_id": 5,
+        "rebalance_indices": [
+          6,
+          7,
+          8,
+          9
+        ],
+        "returns_6m": [
+          0.1217899072338259,
+          0.052931624085867865,
+          0.09579489340695616,
+          0.0
+        ],
+        "weights": [
+          0.0013088835962772217,
+          0.0012557785754091166,
+          0.0013815673599817924,
+          0.0016636679902083745
+        ],
+        "annualised_return": 0.13768094743802362,
+        "annualised_vol": 0.06525494587967769,
+        "sharpe_ratio": 2.072765681435472,
+        "max_drawdown": 0.0,
+        "cumulative_return": 0.2943179381634793,
+        "rolling_sharpe_3y": {
+          "series": [],
+          "mean": null,
+          "std": null
+        },
+        "sharpe_5y": null,
+        "time_average_contribution": 8.955657731077673e-05,
+        "cumulative_contribution": 0.0003582668010708723
+      }
+    }
+  },
+  "validation_portfolio_metrics": {
+    "long_short": {
+      "cumulative_return": 0.6776831457269987,
+      "annualised_return": 0.10902666508190184,
+      "annualised_vol": 0.15084544914120793,
+      "sharpe_ratio": 0.7687515729446306,
+      "max_drawdown": 0.2924043726527836,
+      "n_rebalances": 20,
+      "rolling_sharpe_3y": {
+        "series": [
+          1.4033345582037398,
+          0.9960954362085341,
+          0.7529336746178155,
+          0.5652127199127697,
+          0.19213594069943202,
+          -0.4323688878651324,
+          -0.60982701804477,
+          -0.2042141796320809,
+          0.005346508335997909
+        ],
+        "mean": 0.29651652804847844,
+        "std": 0.67953202259988
+      },
+      "sharpe_5y": 0.7687515729446306
+    }
+  }
+}

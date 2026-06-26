@@ -82,7 +82,7 @@ class Config:
     # Raw data and output paths
     data_path: Path = Path("data/Global Factor_EM.parquet")
     output_dir: Path = Path("data/processed")
-    results_dir: Path = Path("results")
+    results_dir: Path = Path("results/transformer")
     train_path: Path = Path("data/processed/train.parquet")
     val_path: Path = Path("data/processed/val.parquet")
     test_path: Path = Path("data/processed/test.parquet")
@@ -107,7 +107,14 @@ class Config:
     # Dual path specific parameters
     n_mlp_layers: int = 2
     lambda_aux: float = 0.3
-    min_firms_attention: int = 10
+    # minimum cross-section size per country before the attention blocks run.
+    # 30 prevents the cross-sectional path from fitting noise on small EM
+    # country buckets; countries below this threshold fall back to the base
+    # MLP path, which is the correct behaviour when peers are too few.
+    min_firms_attention: int = 30
+    # linear warmup over the first warmup_epochs epochs stabilises early
+    # transformer training before ReduceLROnPlateau takes control.
+    warmup_epochs: int = 5
 
     # Optimiser and training schedule
     learning_rate: float = 1e-4
@@ -116,10 +123,12 @@ class Config:
     patience: int = 15
     grad_clip: float = 1.0
 
-    # Multi-horizon loss weights
-    lambda_3m: float = 0.2
-    lambda_6m: float = 0.5
-    lambda_12m: float = 0.3
+    # Multi-horizon loss weights. 6m receives the largest weight because
+    # 3m returns in EM are dominated by microstructure noise and dilute
+    # the primary prediction signal when weighted equally.
+    lambda_3m: float = 0.1
+    lambda_6m: float = 0.7
+    lambda_12m: float = 0.2
 
     target_vol: float = 0.10
     vol_lookback: int = 6
@@ -1273,7 +1282,16 @@ def train_variant(config):
         )
         val_metrics = evaluate(model, val_ds, config)
         val_corr_6m = val_metrics["rank_corr"]["target_6m"]
-        scheduler.step(val_corr_6m)
+
+        # linear warmup: set lr directly for the first warmup_epochs epochs
+        # so the model explores the loss surface before ReduceLROnPlateau
+        # starts contracting the learning rate on stagnating validation signal.
+        if epoch <= config.warmup_epochs:
+            warmup_lr = config.learning_rate * epoch / config.warmup_epochs
+            for pg in optimizer.param_groups:
+                pg["lr"] = warmup_lr
+        else:
+            scheduler.step(val_corr_6m)
 
         history["train_loss"].append(train_loss)
         history["train_main"].append(train_main)
@@ -1420,6 +1438,10 @@ for variant_name in ["linear", "per_feature", "ple", "periodic", "fourier"]:
             cfg.periodic_num_freq = best_params["periodic_num_freq"]
         if "ple_num_bins" in best_params:
             cfg.ple_num_bins = best_params["ple_num_bins"]
+        if "min_firms_attention" in best_params:
+            cfg.min_firms_attention = best_params["min_firms_attention"]
+        if "warmup_epochs" in best_params:
+            cfg.warmup_epochs = best_params["warmup_epochs"]
         print(f"applied tuned hyperparameters for {variant_name} from {hpt_path}")
     else:
         print(f"no tuned hyperparameters found at {hpt_path}, using defaults")
