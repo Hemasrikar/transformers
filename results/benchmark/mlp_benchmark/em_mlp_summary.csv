@@ -1,0 +1,5 @@
+model,portfolio,scaling,rc_test,sharpe,se,ann_ret,ann_vol,cum_return,max_dd,n_obs
+mlp,long_short,unscaled,0.1606,2.7507,0.6916,15.38,5.59,108.36,0.0,10
+mlp,long_short,scaled,0.1606,2.1485,0.5752,28.93,13.46,273.5,0.0,10
+mlp,long_only,unscaled,0.1606,0.9334,0.3789,10.97,11.75,65.55,8.82,10
+mlp,long_only,scaled,0.1606,1.033,0.3916,10.61,10.28,63.84,6.18,10

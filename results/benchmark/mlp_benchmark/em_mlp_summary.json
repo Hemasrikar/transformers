@@ -1,30 +1,8 @@
 {
-  "run_timestamp_utc": "2026-06-25T17:15:47",
-  "n_features": 421,
+  "construction": "mean_split_softmax_cap_6m",
+  "target_column": "ret_exc_lead6m",
+  "n_features": 398,
   "feature_cols": [
-    "obs_main",
-    "exch_main",
-    "common",
-    "primary_sec",
-    "me",
-    "me_company",
-    "ret_exc",
-    "ret",
-    "ret_local",
-    "ret_lag_dif",
-    "prc_local",
-    "prc_high",
-    "prc_low",
-    "bidask",
-    "fx",
-    "ff49",
-    "dolvol",
-    "shares",
-    "tvol",
-    "adjfct",
-    "crsp_shrcd",
-    "crsp_exchcd",
-    "prc",
     "market_equity",
     "div12m_me",
     "chcsho_12m",
@@ -425,20 +403,19 @@
     "rvolhl_21d"
   ],
   "architecture": {
-    "name": "three-layer MLP",
+    "name": "three_layer_mlp",
     "n_hidden_layers": 3,
     "hidden_width": 128,
-    "activation": "ELU",
-    "dropout": 0.34033148208546443,
-    "imputation": "median (zero in rank-normalised space)",
-    "parameter_count": 87169
+    "activation": "elu",
+    "dropout": 0.17239402191266212,
+    "parameter_count": 84225
   },
   "split": {
     "train": {
       "start": "1995-01-31",
       "end": "2015-12-31",
       "n_months": 252,
-      "n_obs": 2175929
+      "n_obs": 2078879
     },
     "val": {
       "start": "2016-01-31",
@@ -447,12 +424,13 @@
     },
     "test": {
       "start": "2021-01-31",
-      "end": "2025-12-31",
-      "n_months": 60
+      "end": "2025-07-31",
+      "n_months": 55
     }
   },
   "config": {
-    "rebalance_freq": 3,
+    "rebalance_freq": 6,
+    "horizon_months": 6,
     "tc_bps": 25,
     "min_stocks": 30,
     "ret_clip": [
@@ -460,10 +438,14 @@
       1.0
     ],
     "target_vol": 0.1,
-    "vol_lookback": 12,
-    "max_leverage_ls": 3.0,
-    "max_leverage_lo": 3.0,
-    "n_epochs_train": 100,
+    "vol_lookback_months": 36,
+    "n_vol_periods": 6,
+    "periods_per_year": 2.0,
+    "max_leverage_long_only": 3.0,
+    "max_leverage_long_short": 3.0,
+    "max_position_weight": 0.05,
+    "n_epochs_hpo": 100,
+    "n_final_epochs": 2,
     "patience": 10,
     "grad_clip_norm": 1.0,
     "optuna_seed": 24,
@@ -473,52 +455,56 @@
   "mlp": {
     "best_params": {
       "d_model": 128,
-      "dropout": 0.34033148208546443,
-      "learning_rate": 0.00035579945609317095,
-      "weight_decay": 0.0002605669233332669,
-      "batch_size": 512
+      "dropout": 0.17239402191266212,
+      "learning_rate": 0.00027838807595693873,
+      "weight_decay": 0.0004709829791198524,
+      "batch_size": 2048
     },
-    "best_val_long_short_sharpe": 3.960735072589691,
-    "best_trial_number": 9,
+    "best_val_long_short_sharpe": 1.897629263610458,
+    "best_trial_number": 28,
     "n_trials_completed": 30,
-    "hpo_time_seconds": 5311.298145294189,
-    "final_training_time_seconds": 240.64086866378784,
-    "best_epoch": 4,
-    "n_epochs_run": 15,
-    "rc_val": 0.08725623081423484,
-    "rc_test": 0.09613503589974579,
+    "hpo_time_seconds": 2461.8064155578613,
+    "final_training_time_seconds": 8.91528058052063,
+    "best_epoch_from_hpo": 1,
+    "n_final_epochs": 2,
+    "rc_val": 0.16060421503498015,
+    "rc_test": 0.16058818982137466,
     "portfolio_metrics": {
-      "long_short_raw": {
-        "ann_ret": 0.4079991610099867,
-        "ann_vol": 0.10660640703091998,
-        "sharpe": 3.8271542243389853,
-        "se_sharpe": 0.3724592758149958,
-        "max_dd": 0.08254776545415743,
-        "n_obs": 60
+      "long_short_unscaled": {
+        "ann_ret": 0.15377025092025962,
+        "ann_vol": 0.05590152310035915,
+        "sharpe": 2.750734548756359,
+        "se_sharpe": 0.6916119055410285,
+        "max_dd": 0.0,
+        "cum_return": 1.083614917199784,
+        "n_obs": 10
       },
       "long_short_scaled": {
-        "ann_ret": 0.3852485167834405,
-        "ann_vol": 0.10425349099424361,
-        "sharpe": 3.6953056737899757,
-        "se_sharpe": 0.3611934387409834,
-        "max_dd": 0.0762881055934831,
-        "n_obs": 60
+        "ann_ret": 0.2892784619908348,
+        "ann_vol": 0.13464248859722228,
+        "sharpe": 2.1484931317349605,
+        "se_sharpe": 0.5751531420896655,
+        "max_dd": 0.0,
+        "cum_return": 2.7349617905029704,
+        "n_obs": 10
       },
-      "long_only_raw": {
-        "ann_ret": 0.33681817097328604,
-        "ann_vol": 0.1206001219928065,
-        "sharpe": 2.792850997226822,
-        "se_sharpe": 0.28577404670926726,
-        "max_dd": 0.05987980408917672,
-        "n_obs": 60
+      "long_only_unscaled": {
+        "ann_ret": 0.10972232021374806,
+        "ann_vol": 0.11754838486015241,
+        "sharpe": 0.9334226101386672,
+        "se_sharpe": 0.37889825607398103,
+        "max_dd": 0.08821030707604864,
+        "cum_return": 0.6555418694684831,
+        "n_obs": 10
       },
       "long_only_scaled": {
-        "ann_ret": 0.30791263937381586,
-        "ann_vol": 0.11791702528793241,
-        "sharpe": 2.6112653251042244,
-        "se_sharpe": 0.2710889552356642,
-        "max_dd": 0.05987980408917672,
-        "n_obs": 60
+        "ann_ret": 0.10614410177380426,
+        "ann_vol": 0.10275182725885203,
+        "sharpe": 1.0330142500182156,
+        "se_sharpe": 0.3916068462591465,
+        "max_dd": 0.06181251942083168,
+        "cum_return": 0.638436068038919,
+        "n_obs": 10
       }
     }
   }

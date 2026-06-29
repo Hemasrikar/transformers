@@ -1,19 +1,20 @@
 {
+  "construction": "mean_split_softmax_cap_6m",
   "best_params": {
-    "n_estimators": 393,
-    "max_depth": 5,
-    "learning_rate": 0.08481054350447192,
-    "subsample": 0.936954488824697,
-    "colsample_bytree": 0.5999765571598739,
-    "min_child_weight": 14,
-    "reg_alpha": 0.024713521040881543,
-    "reg_lambda": 1.3723145380488813
+    "n_estimators": 401,
+    "max_depth": 7,
+    "learning_rate": 0.14133990687190043,
+    "subsample": 0.672917118045331,
+    "colsample_bytree": 0.7960521164296441,
+    "min_child_weight": 9,
+    "reg_alpha": 3.7099748733151694,
+    "reg_lambda": 0.03616373068486893
   },
-  "best_value": 2.085553489361625,
-  "best_trial_number": 43,
+  "best_value": 2.3800357400375898,
+  "best_trial_number": 19,
   "best_trial_user_attrs": {
-    "val_sharpe_long_only": 1.2785441359376948
+    "val_sharpe_long_only": 0.6355692623426802
   },
   "n_trials_completed": 50,
-  "hpo_time_seconds": 1463.311152458191
+  "hpo_time_seconds": 776.5726864337921
 }
