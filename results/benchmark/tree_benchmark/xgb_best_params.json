@@ -1,0 +1,20 @@
+{
+  "construction": "mean_split_softmax_cap_6m",
+  "best_params": {
+    "n_estimators": 598,
+    "max_depth": 6,
+    "learning_rate": 0.1308160636442561,
+    "subsample": 0.9690833187978939,
+    "colsample_bytree": 0.9957616589543064,
+    "min_child_weight": 8,
+    "reg_alpha": 1.459699856402196,
+    "reg_lambda": 0.30524535962176974
+  },
+  "best_value": 2.221704355756333,
+  "best_trial_number": 47,
+  "best_trial_user_attrs": {
+    "val_sharpe_long_only": 0.6307301233669025
+  },
+  "n_trials_completed": 50,
+  "hpo_time_seconds": 1096.5247066020966
+}

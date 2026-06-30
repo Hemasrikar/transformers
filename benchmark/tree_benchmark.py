@@ -62,14 +62,10 @@ xgb_use_cuda = False
 lgb_use_gpu = False
 if cuda_available:
     xgb_use_cuda = _probe(
-        lambda x, y: xgb.XGBRegressor(
-            n_estimators = 5, tree_method = 'hist', device = 'cuda', verbosity = 0,
-        ).fit(x, y), 'xgboost',
+        lambda x, y: xgb.XGBRegressor(n_estimators = 5, tree_method = 'hist', device = 'cuda', verbosity = 0).fit(x, y), 'xgboost',
     )
     lgb_use_gpu = _probe(
-        lambda x, y: lgb.LGBMRegressor(
-            n_estimators = 5, device = 'gpu', verbose = -1,
-        ).fit(x, y), 'lightgbm',
+        lambda x, y: lgb.LGBMRegressor(n_estimators = 5, device = 'gpu', verbose = -1).fit(x, y), 'lightgbm',
     )
 
 xgb_device_params = {'tree_method': 'hist', 'device': 'cuda'} if xgb_use_cuda else {'tree_method': 'hist'}
@@ -102,7 +98,7 @@ max_position_weight = 0.05
 
 n_trials_xgb = 50
 n_trials_lgb = 50
-optuna_seed = 42
+optuna_seed = 24
 n_hpo_months = 36
 
 
@@ -171,8 +167,8 @@ print(f'countries: {df["excntry"].nunique()}')
 df = df.sort_values(['id', 'eom']).reset_index(drop = True)
 
 # group by firm and shift the one month forward return backward by k months
-# for k in 0..5, then compound. shifting in this direction aligns
-# ret_exc_lead1m at month t+k onto row t, namely the return realised
+# for k in 0.5, then compound. Shifting in this direction aligns
+# ret_exc_lead1m at month t+k onto row t, the return realised
 # between t+k and t+k+1, which is exactly the kth component of the six
 # month forward block starting at t.
 
@@ -192,17 +188,17 @@ cum = np.where(
 df[ret_col] = cum.astype(np.float32)
 
 # clip the cumulative target to the same band as the underlying one month
-# returns to avoid extreme outliers driving the loss; the band is wider
+# returns to avoid extreme outliers driving the loss. the band is wider
 # than for one month returns because six month compounded returns have
 # fatter tails
 df[ret_col] = df[ret_col].clip(lower = ret_clip_low * 2.0, upper = ret_clip_high * 2.0)
 
 retained = int(np.isfinite(cum).sum())
 print(f'cumulative six month target constructed')
-print(f'  retained rows with valid six month forward block: {retained:,} of {len(df):,}')
-print(f'  retention rate: {100.0 * retained / len(df):.2f}%')
+print(f'retained rows with valid six month forward block: {retained:,} of {len(df):,}')
+print(f'retention: {100.0 * retained / len(df):.2f}%')
 
-# drop the one month forward target from feature pool consideration; it
+# drop the one month forward target from feature pool consideration. it
 # was retained only to construct the six month target
 del shifted
 gc.collect()
@@ -247,7 +243,6 @@ print(f'processed: {len(sorted_dates)} months')
 print(f'avg firms/month: {np.mean([len(m["ids"]) for m in all_months.values()]):.0f}')
 
 
-
 train_dates = [d for d in sorted_dates if d <= train_end]
 val_dates = [d for d in sorted_dates if train_end < d <= val_end]
 test_dates = [d for d in sorted_dates if d > val_end]
@@ -269,7 +264,6 @@ trainval_dates = train_dates + val_dates
 x_trainval = np.vstack([all_months[d]['x'] for d in trainval_dates])
 y_trainval = np.concatenate([all_months[d]['r'] for d in trainval_dates])
 print(f'x_trainval: {x_trainval.shape}')
-
 
 
 def portfolio_metrics(rets, periods_per_year, dates = None):
@@ -310,12 +304,10 @@ def portfolio_metrics(rets, periods_per_year, dates = None):
             ypk = np.maximum.accumulate(ycw)
             y_dd = float(((ypk - ycw) / ypk).max())
             per_year[int(y)] = {
-                'ann_ret': y_ret,
-                'ann_vol': y_vol,
-                'sharpe': y_sharpe,
-                'max_dd': y_dd,
+                'ann_ret': y_ret, 'ann_vol': y_vol,
+                'sharpe': y_sharpe, 'max_dd': y_dd,
                 'cum_return': float(ycw[-1] - 1.0),
-                'n_obs': int(len(sub)),
+                'n_obs': int(len(sub))
             }
         out['per_year'] = per_year
 
@@ -782,7 +774,7 @@ else:
             trial.set_user_attr('val_sharpe_long_only', lo_sharpe)
             return ls_sharpe
         finally:
-            del model                                                     #type: ignore
+            del model                                                    #type: ignore 
             _gpu_cleanup()
 
     lgb_study = optuna.create_study(
@@ -861,20 +853,20 @@ class ChunkIter(xgb.DataIter):
         self.current = 0
         super().__init__(cache_prefix = cache_prefix)
 
-    def next(self, input_data):                                    #type: ignore
+    def next(self, input_data):
         if self.current >= self.n_chunks:
-            return 0
+            return False
         start = self.current * self.chunk_size
         end = min(start + self.chunk_size, len(self.x))
         input_data(data = self.x[start:end], label = self.y[start:end])
         self.current += 1
-        return 1
+        return True
 
     def reset(self):
         self.current = 0
 
 
-# build the booster parameter dictionary; the CPU device assignment is
+# build the booster parameter dictionary. The CPU device assignment is
 # deliberate and required by the external memory mode
 xgb_final_params = dict(xgb_best)
 xgb_final_params.update({
@@ -928,6 +920,11 @@ lgb_final_params['max_bin'] = 128
 lgb_model = lgb.LGBMRegressor(
     **lgb_final_params,
     random_state = optuna_seed,
+    bagging_seed = optuna_seed,
+    feature_fraction_seed = optuna_seed,
+    data_random_seed = optuna_seed,
+    deterministic = True,
+    force_row_wise = True,
     n_jobs = -1,
     verbose = -1,
 )
@@ -956,9 +953,10 @@ def rank_correlation_oos(model, month_dates):
         valid = np.isfinite(pred) & np.isfinite(m['r'])
         if valid.sum() < 10:
             continue
-        c, _ = spearmanr(pred[valid], m['r'][valid])
-        if not np.isnan(c):                                 #type: ignore
-            corrs.append(float(c))                             #type: ignore
+        result = spearmanr(pred[valid], m['r'][valid])
+        c = result.statistic                                  # pyright: ignore[reportAttributeAccessIssue]
+        if not np.isnan(c):
+            corrs.append(float(c))                      
     return float(np.mean(corrs)) if corrs else 0.0
 
 
@@ -1050,14 +1048,8 @@ for name, ev in [('XGBoost', xgb_eval), ('LightGBM', lgb_eval)]:
 
 
 
-xgb_imp = pd.DataFrame({
-    'feature': feature_cols,
-    'importance': xgb_model.feature_importances_,
-}).sort_values('importance', ascending = False)
-lgb_imp = pd.DataFrame({
-    'feature': feature_cols,
-    'importance': lgb_model.feature_importances_,
-}).sort_values('importance', ascending = False)
+xgb_imp = pd.DataFrame({'feature': feature_cols,'importance': xgb_model.feature_importances_}).sort_values('importance', ascending = False)
+lgb_imp = pd.DataFrame({'feature': feature_cols,'importance': lgb_model.feature_importances_}).sort_values('importance', ascending = False)
 
 xgb_imp.to_csv(results_dir / 'xgb_feature_importance.csv', index = False)
 lgb_imp.to_csv(results_dir / 'lgb_feature_importance.csv', index = False)
@@ -1134,14 +1126,11 @@ summary = {
     },
 }
 
-with open(results_dir / 'tree_summary.json', 'w') as fh:
-    json.dump(summary, fh, indent = 2, default = float)
+with open(results_dir / 'tree_summary.json', 'w') as gbms:
+    json.dump(summary, gbms, indent = 2, default = float)
 print(f'summary saved to {results_dir / "tree_summary.json"}')
 
-# headline summary table with a single Sharpe column. trailing window
-# Sharpe ratios at one, three, and five years are no longer reported in
-# the headline table; the per year breakdown below carries the same
-# information at a finer granularity.
+
 rows = []
 for name, ev, rc in [('xgboost', xgb_eval, xgb_rc_test), ('lightgbm', lgb_eval, lgb_rc_test)]:
     for portfolio, scaling, key in [
@@ -1152,10 +1141,8 @@ for name, ev, rc in [('xgboost', xgb_eval, xgb_rc_test), ('lightgbm', lgb_eval, 
     ]:
         m = ev['metrics'][key]
         rows.append({
-            'model': name,
-            'portfolio': portfolio,
-            'scaling': scaling,
-            'rc_test': round(rc, 4),
+            'model': name, 'portfolio': portfolio,
+            'scaling': scaling, 'rc_test': round(rc, 4),
             'sharpe': _round_or_none(m['sharpe'], 4),
             'se': _round_or_none(m['se_sharpe'], 4),
             'ann_ret': _round_or_none(m['ann_ret'] * 100, 2),
@@ -1166,18 +1153,13 @@ for name, ev, rc in [('xgboost', xgb_eval, xgb_rc_test), ('lightgbm', lgb_eval, 
             'n_obs': m['n_obs'],
         })
 summary_table = pd.DataFrame(rows)
-print('\nTree Benchmark, EM Universe, mean split capped softmax, 6m rebalance')
+print('Tree Benchmark, EM Universe, mean split capped softmax, 6m rebalance')
 print(summary_table.to_string(index = False))
 summary_table.to_csv(results_dir / 'tree_summary.csv', index = False)
 print('summary csv saved')
 
 # per year breakdown across both models. one row per (model, portfolio,
-# scaling, year). this file is the basis for the per year diagnostic
-# plots produced downstream. at six month rebalance frequency each year
-# contains approximately two period observations, so the per year sharpe
-# and ann_vol values are noisy by construction; the cum_return and
-# max_dd fields are stable and are the appropriate columns for year by
-# year plots.
+# scaling, year).
 
 per_year_rows = []
 
@@ -1186,10 +1168,8 @@ def _flush_per_year(model, portfolio, scaling, metrics):
     for year in sorted(py.keys()):
         ym = py[year]
         per_year_rows.append({
-            'model': model,
-            'portfolio': portfolio,
-            'scaling': scaling,
-            'year': int(year),
+            'model': model, 'portfolio': portfolio,
+            'scaling': scaling, 'year': int(year),
             'ann_ret': round(float(ym['ann_ret']) * 100, 4),
             'ann_vol': round(float(ym['ann_vol']) * 100, 4),
             'sharpe': (round(float(ym['sharpe']), 4)
@@ -1197,7 +1177,7 @@ def _flush_per_year(model, portfolio, scaling, metrics):
                       else None),
             'max_dd': round(float(ym['max_dd']) * 100, 4),
             'cum_return': round(float(ym['cum_return']) * 100, 4),
-            'n_obs': int(ym['n_obs']),
+            'n_obs': int(ym['n_obs'])
         })
 
 for name, ev in [('xgboost', xgb_eval), ('lightgbm', lgb_eval)]:
@@ -1211,25 +1191,12 @@ per_year_df.to_csv(results_dir / 'tree_per_year_metrics.csv', index = False)
 print(f'per year metrics saved, {len(per_year_df)} rows')
 
 
-
-plt.rcParams.update({
-    'font.family': 'serif',
-    'mathtext.fontset': 'cm',
-    'font.size': 10,
-    'axes.spines.top': False,
-    'axes.spines.right': False,
-    'savefig.dpi': 300,
-    'savefig.bbox': 'tight',
-    'pdf.fonttype': 42,
-})
-
 xgb_color = 'steelblue'
 lgb_color = 'darkorange'
 xlabel_periods = f'Rebalance periods from start of test window ({rebalance_freq} months each)'
 
 # figure 1, volatility targeted cumulative wealth on the scaled series
 fig, axes = plt.subplots(1, 2, figsize = (12, 4))
-
 ax = axes[0]
 ax.plot(np.cumprod(1 + xgb_eval['returns_ls_scaled']), label = 'XGBoost', color = xgb_color)
 ax.plot(np.cumprod(1 + lgb_eval['returns_ls_scaled']), label = 'LightGBM', color = lgb_color)
@@ -1247,17 +1214,13 @@ ax.set_ylabel('Cumulative Wealth')
 ax.set_title('Long Only, Volatility Targeted')
 ax.legend(frameon = False)
 ax.grid(alpha = 0.3)
-
 fig.tight_layout()
-fig.savefig(results_dir / 'tree_cumulative_scaled.pdf')
-fig.savefig(results_dir / 'tree_cumulative_scaled.png')
 plt.show()
-plt.close(fig)
+
 
 
 # figure 2, unscaled cumulative wealth
 fig, axes = plt.subplots(1, 2, figsize = (12, 4))
-
 ax = axes[0]
 ax.plot(np.cumprod(1 + xgb_eval['returns_ls_raw']), label = 'XGBoost', color = xgb_color)
 ax.plot(np.cumprod(1 + lgb_eval['returns_ls_raw']), label = 'LightGBM', color = lgb_color)
@@ -1275,17 +1238,13 @@ ax.set_ylabel('Cumulative Wealth')
 ax.set_title('Long Only, Unscaled')
 ax.legend(frameon = False)
 ax.grid(alpha = 0.3)
-
 fig.tight_layout()
-fig.savefig(results_dir / 'tree_cumulative_unscaled.pdf')
-fig.savefig(results_dir / 'tree_cumulative_unscaled.png')
 plt.show()
-plt.close(fig)
+
 
 
 # figure 3, scaled and unscaled overlaid, solid is scaled, dashed is unscaled
 fig, axes = plt.subplots(1, 2, figsize = (12, 4))
-
 ax = axes[0]
 ax.plot(np.cumprod(1 + xgb_eval['returns_ls_scaled']), label = 'XGBoost, Scaled', color = xgb_color)
 ax.plot(np.cumprod(1 + xgb_eval['returns_ls_raw']), label = 'XGBoost, Unscaled', color = xgb_color, linestyle = '--')
@@ -1307,18 +1266,14 @@ ax.set_ylabel('Cumulative Wealth')
 ax.set_title('Long Only, Scaled and Unscaled')
 ax.legend(frameon = False, fontsize = 9, loc = 'upper left')
 ax.grid(alpha = 0.3)
-
 fig.tight_layout()
-fig.savefig(results_dir / 'tree_cumulative_combined.pdf')
-fig.savefig(results_dir / 'tree_cumulative_combined.png')
 plt.show()
-plt.close(fig)
+
 
 
 # figure 4, tree specific diagnostics: optuna search progress and xgboost
 # feature importance ranking
 fig, axes = plt.subplots(1, 3, figsize = (18, 4))
-
 if xgb_study is not None:
     xgb_vals = [t.value for t in xgb_study.trials if t.value is not None]
     axes[0].plot(np.maximum.accumulate(xgb_vals), color = xgb_color)
@@ -1350,11 +1305,5 @@ axes[2].set_yticklabels(top_xgb_imp['feature'][::-1], fontsize = 9)
 axes[2].set_xlabel('Importance, Gain')
 axes[2].set_title('Top 15 XGBoost Features')
 axes[2].grid(axis = 'x', alpha = 0.3)
-
 fig.tight_layout()
-fig.savefig(results_dir / 'tree_diagnostics.pdf')
-fig.savefig(results_dir / 'tree_diagnostics.png')
 plt.show()
-plt.close(fig)
-
-print('plots saved: tree_cumulative_scaled, tree_cumulative_unscaled, tree_cumulative_combined, tree_diagnostics')

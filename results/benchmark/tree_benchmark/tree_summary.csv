@@ -1,0 +1,9 @@
+model,portfolio,scaling,rc_test,sharpe,se,ann_ret,ann_vol,cagr,cum_return,max_dd,n_obs
+xgboost,long_short,unscaled,0.1093,1.4408,0.4514,15.76,10.94,15.84,108.55,0.55,10
+xgboost,long_short,scaled,0.1093,1.4159,0.4475,13.1,9.25,13.11,85.18,1.64,10
+xgboost,long_only,unscaled,0.1093,0.921,0.3774,11.53,12.52,11.12,69.39,8.82,10
+xgboost,long_only,scaled,0.1093,1.0423,0.3928,10.43,10.0,10.21,62.59,5.63,10
+lightgbm,long_short,unscaled,0.1049,1.3969,0.4445,15.57,11.15,15.61,106.55,1.51,10
+lightgbm,long_short,scaled,0.1049,1.3395,0.4356,10.89,8.13,10.87,67.49,4.54,10
+lightgbm,long_only,unscaled,0.1049,0.9219,0.3775,11.6,12.58,11.18,69.9,8.71,10
+lightgbm,long_only,scaled,0.1049,1.0444,0.3931,10.42,9.98,10.21,62.59,5.51,10

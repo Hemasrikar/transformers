@@ -1,0 +1,11 @@
+{
+  "train_losses": [
+    0.19661403950450457,
+    0.19263820087639835,
+    0.1900663823475988
+  ],
+  "best_epoch_from_hpo": 2,
+  "n_final_epochs": 3,
+  "training_time_seconds": 12.6508150100708,
+  "parameter_count": 730113
+}
